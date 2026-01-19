@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="shortcut icon" type="image/png" href="anubis.png">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About CarbonKind - The Mission</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
+    <style>
+        /* --- Global & Theme Reset --- */
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #ffffff;
+            color: #2e3d33;
+            line-height: 1.6;
+        }
+
+        /* --- Hero Section --- */
+        .about-hero {
+            background: linear-gradient(rgba(0, 100, 0, 0.8), rgba(0, 50, 0, 0.9)), url('img8.jpg');
+            background-size: cover;
+            background-position: center;
+            color: white;
+            padding: 80px 20px;
+            text-align: center;
+        }
+
+        .about-hero h1 {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            letter-spacing: 2px;
+        }
+
+        .about-hero p {
+            font-size: 1.2rem;
+            max-width: 700px;
+            margin: 0 auto;
+            opacity: 0.9;
+        }
+
+        /* --- Content Sections --- */
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 50px 20px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-top: 40px;
+        }
+
+        .card {
+            padding: 30px;
+            border-radius: 15px;
+            background: #f9fff9;
+            border: 1px solid #e0eee0;
+            transition: transform 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            border-color: #32CD32;
+        }
+
+        .card i {
+            font-size: 40px;
+            color: #2E7D32;
+            margin-bottom: 15px;
+        }
+
+        .card h3 {
+            color: #1B5E20;
+            margin-top: 0;
+        }
+
+        /* --- Team Section --- */
+        .team-section {
+            background-color: #f2f2f2;
+            padding: 60px 20px;
+            text-align: center;
+            border-radius: 50px 50px 0 0;
+        }
+
+        .lead-dev {
+            font-size: 1.5rem;
+            color: #1B5E20;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .co-dev {
+            color: #666;
+            font-style: italic;
+        }
+
+        .badge {
+            display: inline-block;
+            background: #32CD32;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+        }
+
+        /* --- Footer --- */
+        footer {
+            text-align: center;
+            padding: 40px;
+            font-size: 0.9rem;
+            color: #888;
+        }
+
+        .btn-back {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 10px 25px;
+            background: #1B5E20;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+
+    <section class="about-hero">
+        <h1>CarbonKind</h1>
+        <p>A Structured Approach to a Greener Future</p>
+    </section>
+
+    <div class="container">
+        <div style="text-align: center; margin-bottom: 50px;">
+            <span class="badge">Open Access & Free</span>
+            <h2>Our Environmental Framework</h2>
+            <p>CarbonKind is more than a website; it is an educational ecosystem designed to translate complex climate science into actionable human solutions.</p>
+        </div>
+
+        <div class="grid">
+            <div class="card">
+                <i class="material-icons">query_stats</i>
+                <h3>Carbon Impact</h3>
+                <p>We analyze the molecular journey of Carbon—the element of life—and how its imbalance affects our global climate, oceans, and biodiversity.</p>
+            </div>
+
+            <div class="card">
+                <i class="material-icons">Tips_and_updates</i>
+                <h3>Modern Solutions</h3>
+                <p>From carbon sequestration to renewable energy grids, we explore the mitigation strategies that are currently saving our atmosphere.</p>
+            </div>
+
+            <div class="card">
+                <i class="material-icons">precision_manufacturing</i>
+                <h3>Future Technology</h3>
+                <p>Deep dive into emerging Green Tech: AI-driven energy efficiency, bio-engineered forests, and high-fidelity thermal satellite mapping.</p>
+            </div>
+
+            <div class="card">
+                <i class="material-icons">groups</i>
+                <h3>Social Network</h3>
+                <p>Connect with a global community. Share your "CarbonKind" acts, earn medals, and see your personal impact grow in real-time.</p>
+            </div>
+        </div>
+    </div>
+
+    <section class="team-section">
+        <h2>The Architects</h2>
+        <div style="margin-top: 30px;">
+            <div class="lead-dev">Lubega Robert</div>
+            <p style="margin-top: 0; font-weight: bold; color: #32CD32;">Project Lead & Chief Developer</p>
+            
+            <div style="margin-top: 20px;" class="co-dev">With contributions from Luyiga Abdul</div>
+        </div>
+        
+        <p style="max-width: 600px; margin: 30px auto; color: #444;">
+            "We believe that environmental education should be structured, free, and accessible to every citizen of Earth. Our mission is to provide the data you need to make the changes the world deserves."
+        </p>
+
+        <a href="paper8.html" class="btn-back">Return to Network</a>
+    </section>
+
+    <footer>
+        <p>© 2025 CarbonKind. Engineered for the Planet.</p>
+    </footer>
+
+</body>
+</html>
