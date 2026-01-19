@@ -1,0 +1,215 @@
+body {
+    font-size: 15pt;font-family: Arial, sans-serif;  
+}
+
+ @media (max-width: 768px) {
+    .content-box {
+        /* Calculates roughly 2 boxes per line with a gap */
+       width: calc(50% - 15px);margin-bottom: 25px;
+    }
+/* ... and reduced padding/font sizes for header/hero */
+}
+@media (max-width: 500px) {
+    .content-box {
+        width: 100%
+ /* Ensures it ignores the original max-width: 280px */
+    }
+/* ... and further simplified the header to stack vertically */
+
+/* --- 5. Bottom Boxes Section (The four image blocks) --- */
+.boxes-section {
+    display: flex;
+    /* KEY CHANGE 1: Allows boxes to wrap to the next line */
+    flex-wrap: wrap;/* KEY CHANGE 2: Centers items when they wrap */
+    justify-content: center; /* ... other styles */
+}
+
+.content-box {
+    /* KEY CHANGE 4: Added a flexible width so it shrinks on small screens */
+    width: 100%; /* ... other styles */
+    
+  }
+}
+
+     .story {
+     
+      margin: 0px;
+      padding: 30px;
+      border-radius: 0px;
+      background: linear-gradient(135deg, #d0f0c0, #b2e8a0);
+      color: #1f3d1f;
+     
+    }
+
+    .story h2 {
+      color: #2f5f2f;
+    }
+    #readButton:hover::after {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    /* Responsive text */
+    @media (max-width: 768px) {
+      h2 {
+        font-size: 1.6rem;            margin: 10px;
+
+      }
+
+      h3 {
+        font-size: 1.2rem;
+      }
+
+      p,
+      li {
+        font-size: 0.95rem;            margin: 10px;
+
+      }
+    }
+
+    @media (max-width: 480px) {
+      h2 {
+        font-size: 1.4rem;            margin: 10px;
+
+      }
+      h1 {
+        font-size: 1.8rem;            margin: 10px;
+
+      }
+
+      h3 {
+        font-size: 1.1rem;
+      }
+
+      p,
+      li {
+        font-size: 0.9rem;            margin: 10px;
+
+      }
+    }
+    img{ height: auto; width: 100%;}    #readButton {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background-color: #E9FFEA;
+      color: #2f855a;
+      border: none;
+      border-radius: 50%;
+      width: 60px;
+      height: 60px;
+      cursor: pointer;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background-color 0.3s ease;
+      z-index: 1000;
+    }
+
+    #readButton:hover {
+      background-color: #5E4C02;
+      color: #fff;
+    }
+
+    /* Tooltip */
+    #readButton::after {
+      content: attr(title);
+      position: absolute;
+      top: 50%;
+      right: 100%;
+      transform: translateY(-50%) translateX(-10px);
+      padding: 5px 10px;
+      background-color: #333;
+      color: #fff;
+      border-radius: 4px;
+      white-space: nowrap;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s, visibility 0.3s;
+      font-size: 14px;
+    }
+
+
+     b {
+      color: #624F04;
+    }
+
+    p {
+      margin-bottom: 15px;
+      font-size: 1rem;            margin: 10px;
+
+    }
+
+    ul {
+      margin: 10px 0 20px 20px;
+      padding: 0;
+      list-style-type: disc;
+    }
+
+    li {
+      margin-bottom: 10px;
+      font-size: 1rem;
+    }
+
+    /* ---------------- Card/Content Section ---------------- */
+    .content {
+      
+    
+      background-color: #ffffff;
+     
+    }
+
+
+         /* Custom font and basic styling */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+        
+        :root {
+            --color-primary: #10b981; /* Emerald-500 */
+            --color-accent: #f59e0b; /* Amber-500 */
+            --color-dark: #1f2937; /* Gray-800 */
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f7f7f7;
+            color: var(--color-dark);
+            line-height: 1.75;
+        }
+        .container-content {
+            max-width: 800px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+        }
+        h2 {
+            border-left: 5px solid var(--color-primary);
+            padding-left: 1rem;
+            margin-top: 1.5rem; 
+            margin: 10px;
+            font-weight: 700;
+            line-height: 1.2;
+        }
+        /* Custom block quote for emphasis */
+        .impact-box {
+            border-left: 6px solid var(--color-accent);
+        }
+
+        /* Responsive Text Size for Key Paragraphs */
+        /* This applies a fluid size: 1.125rem (text-lg) up to 1.5rem, capped at 800px viewport width */
+        .responsive-text {
+            font-size: clamp(1.125rem, 0.825rem + 0.5vw, 1.5rem);
+        }
+img{ height: auto; width: 100%;}
+a:hover{ color: #0B5417;}
+
+a{ color: #6C5A00;}
+
+         h1 {
+            border-left: 5px solid #017645;
+            padding-left: 1rem;
+            margin-top: 1.5rem;
+            font-weight: 900;
+            line-height: 1.2;
+                   margin: 10px;
+ }
+ 
+ 
+ 
+ 
