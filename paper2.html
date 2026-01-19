@@ -1,0 +1,1931 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Global Warming Simulation</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    
+     <link rel="shortcut icon" type="image/png" href="anubis.png">
+
+        <script>
+        function submitAnswer(answer, questionType) {
+            const recipient = "carbonkind114@gmail.com";
+            const subject = encodeURIComponent(
+                questionType === 'first' ? "Initial Response" : "Changed Response"
+            );
+            let body = answer;
+
+            if (questionType === 'change') {
+                const reason = document.getElementById('reason').value;
+                body += `\nReason for change: ${reason}`;
+            }
+
+            // Send email
+            window.location.href = `mailto:${recipient}?subject=${subject}&body=${encodeURIComponent(body)}`;
+
+            // Hide current question and show next if applicable
+            if (questionType === 'first') {
+                document.getElementById('first-question').style.display = 'none';
+                document.getElementById('change-question').style.display = 'block';
+            } else {
+                // Optional: hide the change question after submission
+                document.getElementById('change-question').style.display = 'none';
+                ;
+            }
+        }
+    </script>
+
+
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            background: #FFFFFF;
+            color: #000000;
+            line-height: 1.6;
+        }
+        
+        /* Header Section */
+        .header-section {
+            
+            display: flex;
+            flex-direction: column;
+    
+            padding: 60px 20px;
+            
+            background: linear-gradient(to bottom,#FFFFFF, #FFFFFF);
+        }
+        
+        .main-title {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            color: #4fc3f7;
+            text-shadow: 0 0 20px rgba(79, 195, 247, 0.7);
+        }
+        
+        .subtitle {
+            font-size: 1.3rem;
+            color: #a0d2ff;
+            max-width: 800px;
+            margin-bottom: 40px;
+            line-height: 1.6;
+        }
+        
+        .scroll-indicator {
+            position: absolute;
+            bottom: 30px;
+            color: #ff9800;
+            animation: bounce 2s infinite;
+            font-size: 1.2rem;
+        }
+        
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% {transform: translateY(0);}
+            40% {transform: translateY(-20px);}
+            60% {transform: translateY(-10px);}
+        }
+        
+        /* Simulation Section */
+        .simulation-section {
+            min-height: 130vh;
+            position: relative;
+            background: #0c0c2e;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        #simulationCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+        
+        .simulation-title {
+            position: relative;
+            z-index: 2;
+            text-align: center;
+            padding: 30px 20px 0;
+            color: #ff9800;
+            font-size: 2rem;
+        }
+        
+        /* Sun rays text display */
+        .rays-text {
+            position: absolute;
+            background: rgba(255, 255, 0, 0.9);
+            color: #ff6600;
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-weight: bold;
+            z-index: 100;
+            pointer-events: none;
+            display: none;
+            border: 2px solid #ff9900;
+            box-shadow: 0 0 20px rgba(255, 255, 0, 0.7);
+        }
+        
+        /* Controls - Placed below simulation */
+        .controls-container {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: rgba(0, 15, 40, 0.85);
+            backdrop-filter: blur(10px);
+            border-top: 1px solid rgba(79, 195, 247, 0.3);
+            padding: 20px;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .control-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .control-label {
+            color: #4fc3f7;
+            font-size: 1rem;
+        }
+        
+        .value-display {
+            background: rgba(79, 195, 247, 0.15);
+            padding: 5px 15px;
+            border-radius: 15px;
+            color: #4fc3f7;
+            font-weight: bold;
+            border: 1px solid rgba(79, 195, 247, 0.3);
+        }
+        
+        .slider {
+            width: 100%;
+            height: 8px;
+            background: linear-gradient(to right, #0000ff, #00e676, #ff9800, #ff4444);
+            border-radius: 4px;
+            outline: none;
+            -webkit-appearance: none;
+        }
+        
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: #4fc3f7;
+            border: 2px solid white;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(79, 195, 247, 0.8);
+        }
+        
+        .accelerate-btn {
+            background: linear-gradient(135deg, #ff9800, #ff4444);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 10px;
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+        
+        .accelerate-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 30px rgba(255, 68, 68, 0.7);
+        }
+        
+        /* Stats Display */
+        .stats-container {
+            position: absolute;
+            top: 80px;
+            right: 20px;
+            background: rgba(0, 15, 40, 0.8);
+            padding: 20px;
+            border-radius: 15px;
+            border: 1px solid rgba(255, 68, 68, 0.3);
+            z-index: 10;
+            min-width: 250px;
+            backdrop-filter: blur(5px);
+        }
+        
+        .stat-item {
+            margin-bottom: 15px;
+        }
+        
+        .stat-label {
+            font-size: 0.9rem;
+            color: #a0d2ff;
+            margin-bottom: 5px;
+        }
+        
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #ff9800;
+        }
+        
+        .catastrophe-warning {
+            color: #ff4444;
+            font-weight: bold;
+            margin-top: 10px;
+            animation: blink 1s infinite;
+            font-size: 0.9rem;
+        }
+        
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        /* Warning Messages - Simple and not covering full screen */
+        .warning-message {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 68, 68, 0.95);
+            padding: 30px;
+            border-radius: 15px;
+            border: 2px solid #ff4444;
+            z-index: 10000;
+            text-align: center;
+            max-width: 500px;
+            display: none;
+            box-shadow: 0 0 50px rgba(255, 0, 0, 0.5);
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: translate(-50%, -50%) scale(1); }
+            50% { transform: translate(-50%, -50%) scale(1.02); }
+        }
+        
+        .warning-content {
+            color: white;
+            font-size: 1.5rem;
+            font-weight: bold;
+            line-height: 1.4;
+        }
+        
+        /* Footer Section */
+        .footer-section {
+           
+            padding: 60px 20px;
+            background: linear-gradient(to top, #FFFFFF, #FFFFFF);
+        }
+        
+        .consequences-title {
+            font-size: 2.5rem;
+            color: #ff4444;
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .consequences-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .consequence-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 25px;
+            border: 1px solid rgba(255, 68, 68, 0.3);
+            transition: transform 0.3s;
+        }
+        
+        .consequence-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .consequence-card h3 {
+            color: #ff9800;
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+        }
+        
+        .consequence-card p {
+            color: #a0d2ff;
+            line-height: 1.6;
+        }
+        
+        /* Instructions */
+        .instructions {
+            position: absolute;
+            bottom: 200px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.5);
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            color: #a0d2ff;
+            text-align: center;
+            z-index: 10;
+            max-width: 500px;
+            backdrop-filter: blur(5px);
+        }
+        
+        /* Scroll down indicator */
+        .scroll-down {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            color: #4fc3f7;
+            font-size: 0.9rem;
+            writing-mode: vertical-rl;
+            text-orientation: mixed;
+            animation: float 3s infinite;
+            z-index: 100;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        /* Simple close button for warnings */
+        .close-warning {
+            position: absolute;
+            top: 1px;
+            right: 1px;
+            background: none;
+            border: none;
+            color:#0B6821;
+            font-size: 24px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        
+        .stat-item {
+            margin: 0;
+            text-align: center;
+        }
+        
+        .stat-label {
+            font-size: 11px;
+            color: #a0d2ff;
+            margin-bottom: 2px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .stat-value {
+            font-size: 20px;
+            font-weight: bold;
+            color: #ff9800;
+            line-height: 1;
+        }
+        
+        .catastrophe-warning {
+            font-size: 10px;
+            margin-top: 0px;
+            grid-column: 1 / -1;
+        }
+        
+        /* Cold temperature warning */
+        .cold-warning {
+            color: #0066ff;
+            font-weight: bold;
+            animation: blink-blue 1s infinite;
+        }
+        
+        @keyframes blink-blue {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        
+        .freeze-warning {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 100, 255, 0.95);
+            padding: 30px;
+            border-radius: 15px;
+            border: 2px solid #0066ff;
+            z-index: 10000;
+            text-align: center;
+            max-width: 500px;
+            display: none;
+            box-shadow: 0 0 50px rgba(0, 100, 255, 0.5);
+            animation: pulse-blue 2s infinite;
+        }
+        
+        @keyframes pulse-blue {
+            0%, 100% { transform: translate(-50%, -50%) scale(1); }
+            50% { transform: translate(-50%, -50%) scale(1.02); }
+        }
+    </style>
+</head>
+<body>
+  
+  
+  
+   <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Global Warming Simulation</title
+
+        <header class="text-center mb-10">
+            <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">Is carbon a villain❓</h3>    <style>
+        button {
+            padding: 15px 30px;
+            font-size: 18px;
+            margin: 10px;
+            cursor: pointer;
+            border: none;
+        }
+        .yes { background-color: white; color: black; }
+        .no { background-color: white; color: black; }
+        textarea {
+            width: 300px;
+            height: 100px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div id="first-question">
+        
+        <button class="yes" onclick="submitAnswer('Yes', 'first')">Yes</button>
+        <button class="no" onclick="submitAnswer('No', 'first')">No</button>
+    </div>
+
+    <div id="change-question" style="display:none;">
+        <h2>Change Response</h2>
+        <p>Please explain why you are changing your answer:</p>
+        <textarea id="reason"></textarea><br>
+        <button class="yes" onclick="submitAnswer('Yes', 'change')">Yes</button>
+        <button class="no" onclick="submitAnswer('No', 'change')">No</button>
+    </div><!--Header Section -->
+  <h2> The impact of carbon to the environment </h2>
+      <p> The silent, invisible force of carbon, cycling through our planet's atmosphere, oceans, and land, is fundamental to life as we know it.  <br>
+ Yet, an imbalance in this delicate system, primarily driven by human activities, has unleashed a cascade of profound and far-reaching environmental impacts.  <br>
+ For millennia, the carbon cycle maintained a natural equilibrium, regulating Earth's temperature and fostering biodiversity.  <br>
+ However, the <b>industrial revolution</b> marked a pivotal shift, ushering in an era where the burning of fossil fuels—coal, oil, and natural gases released vast quantities of stored carbon into the atmosphere as carbon dioxide (CO₂) or Carbon monoxide . <br>This dramatic increase has become the primary driver of <b>global warming</b>, setting in motion a series of interconnected environmental challenges that threaten the very fabric of our planet.  
+          <br>
+
+        The most prominent and dire consequence of elevated carbon emissions is the relentless march of global warming.  <br>
+ Carbon dioxide, along with other greenhouse gases, acts like an insulating blanket, trapping heat within Earth's atmosphere.  <br>
+ While a natural greenhouse effect is essential for life, human-induced emissions have thickened this blanket to dangerous levels, leading to a steady and discernible rise in global average temperatures.  <br>
+ This warming trend is not merely about hotter days; it fundamentally alters climatic patterns worldwide.  <br>
+ We are witnessing more frequent and intense heatwaves, turning once-temperate regions into scorching landscapes and posing severe risks to human health, agriculture, and ecosystems.   <br>
+ 
+As temperatures climb, the Earth's delicate hydrological cycle is thrown into disarray, manifesting in a cruel dichotomy of droughts and floods.
+      <h2>
+   Global warming the gradual temperature increase
+      </h2>  
+     <img src="global1.jpg">
+     <p style="font-size: 2vw;">
+Source: IPCC (2021), Figure SPM.1 – Climate Change 2021: The Physical Science Basis.
+     </p>
+     <p>Global warming is the long-term rise of Earth’s average surface temperature caused mainly by human activities that release greenhouse gases (like carbon dioxide and methane).  <br>
+ Even small average temperature increases shift weather patterns, melt ice, and unbalance ecosystems — and because Earth is connected, those changes ripple into sea-level rise, stronger storms, damaged food systems, health risks, and economic stress.   <br>
+Understanding global warming first makes it easier to see why so many environmental problems are connected.  <br>
+Global warming has been noticed by expert scientists how have been collecting the earth's data on climate patterns and temperature increase for a long time and scientific observation   <br>
+<img src="increase.jpg"><p style="font-size: 2vw;">Source: NASA, NOAA, Berkeley Earth, Met Office Hadley Centre, Cowtan and Way analysis (1880-2020).</p>
+<p>
+        Global temperature records start around 1880 because observations did not sufficiently cover enough of the planet prior to that time.   <br>
+The line plot above shows yearly temperature anomalies from 1880 to 2020 as recorded by NASA, NOAA, the Berkeley Earth research group, the Met Office Hadley Centre (United Kingdom), and the Cowtan and Way analysis.     <br>
+Though there are minor variations from year to year, all five records show peaks and valleys in sync with each other.  <br>
+ All show rapid warming in the past few decades, and all show the last decade as the warmest.
+   <br>NASA’s temperature analyses incorporate surface temperature measurements from more than 20,000 weather stations, ship- and buoy-based observations of sea surface temperatures, and temperature measurements from Antarctic research stations.   <br>
+These in situ measurements are analyzed using an algorithm that considers the varied spacing of temperature stations around the globe and urban heat island effects.
+  <br>
+<b>
+  Unfortunately these temperatures are still rapidly increasing annually
+</b>
+<img src="last.jpg">
+<p style="font-size: 2vw;">Source: NASA (2022 global warming chart)</p>
+ <p>       
+        
+  The temperatures we experience locally and in short periods can fluctuate significantly due to predictable, cyclical events (night and day, summer and winter) and hard-to-predict wind and precipitation patterns. But the global temperature mainly depends on how much energy the planet receives from the Sun and how much it radiates back into space. The energy coming from the Sun fluctuates very little by year, while the amount of energy radiated by Earth is closely tied to the chemical composition of the atmosphere—particularly the amount of heat-trapping greenhouse gases.  <b>
+      The increase in green house gasses on earth results into the increase in gradual temperatures 
+  </b>    
+        <h2>
+          Below is a 3D simulation of global warming, you can adjust the CO₂ and the  radiation from the sun 
+        </h2>
+  <link rel="stylesheet" href="style.css">      
+    </section>
+    
+    <!-- Simulation Section --><div id="check">
+        <!--Tab to edit-->
+    <section class="simulation-section">
+ 
+        <div id="simulationCanvas"></div>
+            
+
+        <!-- Sun rays text display -->
+        <div id="raysText" class="rays-text">SUN RAYS</div>
+        
+        <!-- Controls placed below simulation -->
+        <div class="controls-container">
+            <div class="control-group">
+                <div class="control-header">
+                    <span class="control-label">🏭 CO₂  LEVELS</span>
+                    <span class="value-display" id="co2SliderValue">350 ppm</span>
+                </div>
+                <input type="range" min="280" max="2000" value="350" class="slider" id="co2Slider">
+            </div>
+            
+            <div class="control-group">
+                <div class="control-header">
+                    <span class="control-label">🔥 SOLAR RADIATION</span>
+                    <span class="value-display" id="heatSliderValue">50%</span>
+                </div>
+                <input type="range" min="1" max="500" value="50" class="slider" id="heatSlider">
+            </div>
+            
+            <button class="accelerate-btn" id="accelerateBtn">
+                ⏩ ACCELERATE TIME 
+            </button>
+        </div>
+        
+        <!-- Stats Display -->
+        <div class="stats-container">
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="stat-label">TEMP</div>
+                    <div class="stat-value" id="tempValue">15.0°C</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">CO2</div>
+                    <div class="stat-value" id="co2Value">350 ppm</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">HEAT</div>
+                    <div class="stat-value" id="heatValue">50%</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">TIME</div>
+                    <div class="stat-value" id="timeValue">0 yrs</div>
+                </div>
+            </div>
+            <div id="catastropheWarning" class="catastrophe-warning" style="display: none;"></div>
+            <div id="coldWarning" class="catastrophe-warning cold-warning" style="display: none;"></div>
+        </div>
+
+    </div>
+    </section>
+    
+<p> The leveling off of temperatures in the middle of the 20th century can be explained by natural variability and by the cooling effects of aerosols generated by factories, power plants, and motor vehicles in the years of rapid economic growth after World War II.  <br>
+ Fossil fuel use also increased after the war (5 percent per year), boosting greenhouse gases. Cooling from aerosol pollution happened rapidly.  <br>
+ In contrast, greenhouse gases accumulated slowly, but they remain in the atmosphere for a much longer time.  <br>
+ According to former GISS director James Hansen, the strong warming trend of the past four decades likely reflects a shift from balanced aerosol and greenhouse gas effects on the atmosphere to a predominance of greenhouse gas effects after aerosols were curbed by pollution controls.
+<h2>Impact of global warming to the world
+</h2>
+    <p>While a natural greenhouse effect is necessary to keep the planet habitable, the excess CO₂  acts like an extra blanket, intensifying this effect and causing the average global temperature to rise.Resulting into: Impact on Agriculture, Ecosystem and Biodiversity Impacts, Melting Ice and Sea Level Rise,Extreme Weather, and drought 
+    <h2>
+      Extreme Weather
+    </h2>
+    <p>
+    We have entered an unprecedented era – one defined by an accelerating warming planet and an escalating threat of extreme weather events globally.  <br>
+ From raging wildfires to engulfing vast swathes of land, torrential floods reshaping coastlines, scorching heatwaves baking communities alive and ferocious storms battering vulnerable regions – these events aren't simply random occurrences;they're an undeniable consequences of our changing climate.  <br>
+  <br>
+Global warming isn't just about raising temperatures; it's fundamentally altering the planet's systems and unleashing forces that are responsible to our extreme weather changes.  <br>
+ It's undeniable truth that our miss use of carbon and over reliance on fossil fuels has pushed our earth's temperature beyond it's natural limits.  <br>
+  <br>
+Global warming doesn’t create natural disasters out of nowhere, but it makes many of them stronger, more frequent, or more unpredictable.  <br>
+ This happens because the Earth’s atmosphere and oceans are getting warmer due to increased greenhouse gases.
+    <h1>
+      Natural disasters made more stronger,frequent and more unpredictable by global warming 
+    </h1>
+   <br>
+<h2>
+ Stronger hurricanes and cyclones — hurricanes get energy from warm ocean water
+</h2>
+
+<img src="hur.jpg">
+<p style="font-size:2vw;">Source: NASA - Hurricane Catarina (2004-03-27)
+</p>
+<p style="color:#005B4F;">
+fig1:Catarina 2004-03-27
+</p>
+<h2>1. Warm Ocean Water as a Fuel</h2>
+<b>Heat Transfer:</b><p> When warm ocean water warms by absorbing solar radiation and becomes relatively warmer than surrounding air at an underwater temperature, this creates an “convection” process – basically, warm water becomes lighter and rises rapidly with cooler water below. This rising water can create an enclosed circulation.
+   <br>
+  <br>
+
+<b>Rotation:</b> This rising warm water doesn't just stay rising; its rotation creates an inward spiral that strengthens as it moves higher up.     <br>
+This rotation can be caused by internal forces within the storm itself or by that as movement can be driven to land causing destruction of property
+
+ <h2>Science book should be rewritten after a rare thing happened on  March 2004</h2><p>
+    The First Hurricane in the South Atlantic
+  <br>
+
+Normally, hurricanes don’t form in the South Atlantic because the conditions there are usually too unfavorable (like cooler waters and strong wind shear).
+But in March 2004, something extremely rare happened:
+  <br>
+️<b> Hurricane Catarina</b>
+  <br>
+
+Occurred off the coast of southern Brazil (mainly Santa Catarina and Rio Grande do Sul).
+  <br>
+
+It was the first recorded hurricane-strength storm in the South Atlantic.
+  <br>
+
+Winds reached roughly 120 mph (195 km/h).
+  <br>
+
+It caused significant damage to buildings and disrupted communities.
+  <br>
+
+Catarina shocked meteorologists because it showed that regions not known for hurricanes might become more vulnerable as the climate changes.
+  <br>
+
+It raised concerns about:
+shifting storm patterns    <br>
+
+warmer oceans in places that used to be too cool, 
+the possibility of more unusual storms in the future ,<b> this is alarming.</b>
+
+    <h2>
+        More intense heatwaves — hotter average temperatures make extreme heat more common.
+    </h2>
+  <p>Heat waves aren't simply about temperatures going up – they’re an intricate phenomenon involving radiation and atmospheric conditions. At its core, heat waves occur when an Earth-based heat source emits infrared radiation – invisible light – into space and then radiates that energy back towards Earth as heat.       <br>
+This process happens constantly throughout the day and night, influencing temperatures across large areas.   <br>
+  <br>
+This radiation does not travel as far as visible light does – it’s absorbed by objects before travelling again.
+  <br>
+  <br>
+
+A heat wave typically starts as an area becomes very hot  sometimes hundred  degrees but requires significant solar energy essentially sunlight  or strong convection  localized warm air rising   to gain enough power.  <br>
+ As that heat energy radiates outward towards space then cools down.   <br>
+This cooling process happens rapidly as energy escapes into space.   <br>
+This becomes an intensifying process and can be rapidly localized but can spread throughout an entire region.   <br>
+The intensity can vary based on various weather factors like cloud cover or proximity by landmasses.
+  <br>
+<h2>Some of the most deadly heat‑waves in the last 25 years
+</h2>
+    <p>2003 European heatwave	Much of Europe (France, Italy, Spain, Germany, etc.)	~72000 total excess deaths across 15+ countries.   <br>
+  <br>
+
+2010 Russian heat wave	Russia (and some adjoining areas)	~56000 excess deaths.   <br>
+  <br>
+
+2022 European heatwaves	Europe (many countries)	~61672 heat‑related deaths estimated.   <br>
+  <br>
+
+2015 Indian heat wave, and 2015 Pakistan heat wave	India (southern & other states) & Pakistan (Sindh, Karachi, etc.)	India: ≥2500 deaths. Pakistan: ~2000 deaths.  <br>
+  <br>
+ 
+2019 European heatwaves	Western & Central Europe (Netherlands, France, UK, Germany, Belgium…)	Estimated ~2500 excess deaths over the summer; some countries saw 400+ excess deaths in a week. 
+ <br>
+    <b>
+      Note: Some people are still unnoticed but where still killed by these dangerous heat waves
+      
+    </b>
+    
+    <h2>
+ Melting Ice and Sea Levels Rise
+    </h2>
+    <img src="fall.jpg"><p>
+<b>Are we losing our planet’s most precious gifts?</b> The slow and relentless rise of sea levels – an indicator in this day’s report  isn't just an environmental issue; it’s an existential challenge for us all.  Melting ice at an alarming rate doesn't just mean hotter summers; it’s pushing entire coastal communities into an uncertain future and threatening vital ecosystems and livelihoods across our world. 
+
+<h2>
+  Antarctica at the South pole
+</h2>
+    <p>
+    According to research based on satellite data (GRACE and GRACE‑FO), between 2002 and 2023 Antarctica lost on average about 150 billion metric tons of ice per year. 
+   <br>
+  <br>
+
+Over a longer period, from 1992 to 2020, the estimated total ice loss from Antarctica is around 2,671 ± 530 gigatons (a gigaton = one billion tons), which corresponds to about 7.4 ± 1.5mm of global sea‑level rise. 
+   <br>
+   <br>
+
+The bulk of this loss comes from the western part of Antarctica (the West Antarctic Ice Sheet) and the Antarctic Peninsula. 
+  
+<img src="ant1.jpg">
+<p style="font-size: 2vw;">
+   Credits: NASA, GRACE and GRACE-FO missions
+</p><b>
+ What the map shows</b>  <br>
+
+<p>
+The images above (from NASA / GRACE data) use color‑coding:
+  <br>
+
+Red / orange areas show where the ice sheet has lost mass — mainly in West Antarctica and parts of the Antarctic Peninsula.
+  <br>
+
+Blue / light-blue areas show where there has been some gain in ice mass — in parts of East Antarctica (mostly due to increased snowfall). 
+  <br>
+
+Overall, the net change is negative: the gains in the East haven’t compensated for the large losses in the West. 
+  <br>
+
+  <br>
+
+ Context & significance
+  <br>
+
+The pace of ice loss has accelerated over recent decades: in the 1980s, Antarctica lost about 40 gigatons per year; by the 2010s, this had increased to ~252 gigatons per year in some estimates. 
+  <br>
+  <br>
+
+If the current trend continues, continued ice loss from Antarctica will contribute significantly to global sea‑level rise, affecting coastal regions worldwide. 
+
+    
+    <h2>
+      Greenland at the North Pole
+    </h2>
+    
+    <img src="green.jpg">
+    <p style="font-size: 2vw;">
+        Source: NASA, GRACE Greenland observation ice mass changes
+    </p>
+  <p> Greenland is melting fast, cracking and losing mass
+<br><br>
+
+According to recent data, Greenland’s ice sheet has been losing ice for 28 years in a row: more ice melts than what is gained as snow. 
+<br>
+
+Between 2016 and 2021, a scientific study found that thousands of big crevasses (cracks) opened across the ice sheet — about 930 million cubic meters of new crack volume over just five years. <br>
+These cracks make the ice sheet more unstable and accelerate ice loss. 
+<br>
+<br>
+
+Melting and ice loss aren’t uniform — edge glaciers and coastal outlet glaciers (the ones that end in the sea) are retreating, calving (breaking off into icebergs), and thinning. <br>
+<br>
+
+
+The melt contributes fresh water into the ocean, which disrupts ocean circulation and accelerates global sea-level rise. 
+
+
+<h2> What scientists warn could happen — major global and regional impacts</h2>
+<p>
+The ice sheet of Greenland contains enough ice to raise global sea levels by about 7.4 meters if it melted completely. 
+ <br>
+
+On current trajectories: rising melt and accelerating ice flow could cause significant sea-level rise by 2100 — contributing to flooding, coastal erosion, displacement of populations, and loss of coastal lands. 
+<br>
+<br>
+
+Freshwater influx into oceans from Greenland’s melt can also disrupt ocean currents — which play a huge role in regulating climate; that could affect weather, storms, rainfall, and even agriculture globally. 
+<br>
+<br>
+
+The melting reduces the Earth’s capacity to reflect sunlight (albedo effect), because white ice reflects more sunlight than darker melted surfaces; this accelerates warming overall. 
+<br>
+<br>
+
+For the Arctic and local ecosystems: loss of ice threatens wildlife adapted to cold environments (animals, marine life), changes habitats and may lead to ecosystem collapse or major shifts. 
+
+<h2>Scientists and institutions sounding alarm bells
+</h2><p>
+Scientists from a 2025 study (using 8,000 high-resolution satellite maps) reported that Greenland’s ice sheet is cracking much faster than before — a warning sign that ice mass loss is accelerating. 
+ <br>
+<br>
+
+According to NASA, the melt from Greenland over the past decades amounts to trillions of tons and has already contributed to measurable sea-level rise globally — and will continue to worsen if trends hold. 
+<br>
+<br>
+
+Glaciologists and climate scientists warn that changes in Greenland may represent a “tipping point” — once certain thresholds (temperature, melt rate, freshwater input) are passed, feedback loops could accelerate ice loss and sea-level rise beyond current projections. 
+
+    
+    
+    <h1>
+ Falling the Peaks: The Dramatic Transformation of Our Mountains
+    </h1>
+   
+<p>Mountains aren't just majestic; they’re living stories etched into time.  <br>
+ We stand at an edge where nature's dramatic artistry meets an accelerating change – where ice sheets are shrinking and shifting like whispers carried on an eternal breeze across our planet’s vast and ancient landscapes.  <br>
+  <br>
+
+
+This isn't an impending doom; it’s an *evolution*. The dramatic retreat of glaciers isn't an end – it’s an *transformation*. It’s revealing previously hidden depths and altering ecosystems we’ve relied upon and haven't even begun quite understanding fully.  <br>
+ This isn’t just about losing ice; it’s about witnessing our planet’s unwavering resilience and an awe-inspiring symphony playing out before our very eyes! 
+<h2>
+<img src="rwe.jpg"><img src="rwe1.jpg">
+<p style="font-size: 2vw;">
+   Source: NASA Earth Observatory - Rwenzori Mountains glacier comparison
+</p>
+   Rwenzori Mountains (Uganda / DR Congo) — before & after glacier loss</h2>
+  <p>
+
+Historical photos (e.g. from 1906) document that glaciers once thickly covered peaks like Mount Stanley and Mount Baker. 
+  <br>
+  <br>
+
+Recent monitoring shows a severe decline: glaciers in Rwenzori have shrunk drastically, with much of the ice lost. 
+  <br>
+  <br>
+
+For instance, the main remaining glacier on Mount Stanley lost nearly 30% of its surface area between 2020 and 2024. 
+
+   
+   <h2>
+       <img src="kil1.jpg">
+            <img src="kil.jpg">
+            <p style="font-size: 2vw;">
+              Source: NASA Earth Observatory - Mount Kilimanjaro glacier retreat
+            </p>
+ Mount Kilimanjaro (Tanzania) — before & after glacier retreat
+</h2>
+   
+ <p>  The glacier and snow cover on Kilimanjaro have dramatically diminished over the decades. 
+  <br>
+  <br>
+
+For example: satellite‑based “Earthshots” images from 1976 vs 2013 show a stark reduction in the mountain’s ice fields. 
+<br>
+Experts estimate that between 1912 and 2011, around 85% of the ice cover on the summit disappeared. 
+
+   
+   <h2>   
+   <img src="can.jpg">
+   <img src="can1.jpg">
+<p style="font-size: 2vw;">
+  Source: NASA - Athabasca Glacier, Canada retreat
+</p>
+     Athabasca Glacier (Canada — Rockies)
+   </h2>
+    <p>
+   These images illustrate how the Athabasca Glacier has receded significantly over the decades — a dramatic example of glacial retreat in North America. 
+ 
+   <h2>
+       <img src="trif.jpg">
+     <p style="font-size:2vw ;">
+   source:<a href="https://www.nbcnews.com/id/wbna11254319"> https://www.nbcnews.com/id/wbna11254319</a>
+     </p>
+       Trift Glacier (Switzerland — Alps)
+   </h2>
+   <p> These show before/after photos of the Trift Glacier retreat between about 2006 and 2015, capturing substantial glacial shrinkage. 
+<h2>   
+
+    <img src="kali.jpg"><p style="font-size:2vw ;">
+   source:<a href="https://www.researchgate.net/figure/Changes-in-the-Qori-Kalis-Glacier-Quelccaya-Ice-Cap-Peru-between-1978-a-and-2002_fig2_7476808"> researchgate</a>
+     </p>
+  Qori Kalis Glacier (Peru — Andes)
+  </h2>
+  <p>This glacier — part of the Peruvian Andes — has also experienced retreat over decades; before/after images are used in climate‑change reports. 
+   
+   <h2>
+       <img src="col.jpg">
+       <p style="font-size:2vw ;">
+   source:<a href="https://www.eurekalert.org/news-releases/562022"> Eurekalert</a>
+     </p>
+     Columbia Glacier (Alaska, USA)
+   </h2><p>
+   These images highlight a dramatic retreat of a tidewater glacier in Alaska over just a few years — a strong example of climate‑driven ice loss. 
+   <h2>
+       <img src="sol.jpg"><p style="font-size:2vw ;">
+   source:<a href="https://www.discover-the-world.com/study-trips/blog/solheimajokull-glacier-a-geography-case-study/"> discover the world</a>
+     </p>
+     Solheimajökull Glacier (Iceland)
+   </h2>
+   <p>The retreat of Solheimajökull Glacier in Iceland is documented via before‑and‑after photographs — showing noticeable glacial shrinkage over less than two decades. 
+
+   <h2>
+       <img src="usa.jpg"><p style="font-size:2vw ;">
+   source:<a href="https://www.climate.gov/news-features/event-tracker/major-flood-outburst-mendenhall-glacier-alaska-not-possible-without"> Climate.gov</a>
+     </p>
+       Mendenhall Glacier (Alaska, USA)
+   </h2>
+    <p>
+   Before/after pictures show that Mendenhall Glacier retreated significantly between 2007 and 2015, a rapid and visible change. 
+<h2>
+    <img src="jack.jpg"><p style="font-size:2vw ;">
+   source:<a href="https://www.usgs.gov/centers/norock/science/status-glaciers-glacier-national-park"> USGS.gov</a>
+     </p>
+    Jackson Glacier (Glacier National Park, USA)
+</h2><p>Historical vs. modern photos from the public‑domain collections show how Jackson Glacier — among others in the park — has shrunk dramatically over the last century. 
+<h2><img src="alps.jpg">
+ <p style="font-size:2vw ;">
+   source:<a href="https://www.greenpeace.org/international/story/71147/heartbreaking-images-illustrate-arctic-glacier-melt-century/"> Greenpeace</a>
+     </p>
+    Corbassière Glacier (Switzerland — Alps / Grand Combin)
+</h2>
+   
+  <p>These images from 2001 and 2023 show the retreat of Corbassière Glacier, reflecting a broader pattern of glacial decline in the Alps in recent decades. <h2>
+      Rising Sea Levels and Coastal Flooding</h2>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+
+        .logo {
+            font-family: 'Guardian Egyptian', Georgia, serif;
+            font-size: 32px;
+            font-weight: 700;
+            color: #052962;
+            margin-bottom: 5px;
+        }
+        
+        .article-header {
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #dcdcdc;
+        }
+        
+        .section-label {
+            font-family: 'Guardian Egyptian', Georgia, serif;
+            font-size: 16px;
+            color: #007F2F;
+            text-transform: uppercase;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            margin-bottom: 10px;
+        }
+        
+        h1
+               .standfirst {
+            font-family: 'Guardian Egyptian', Georgia, serif;
+            font-size: 22px;
+            color: #555;
+            margin-bottom: 20px;
+            font-weight: 400;
+        }
+        
+        .byline {
+            font-size: 15px;
+            color: #767676;
+            margin-bottom: 5px;
+        }
+        
+        .date {
+            font-size: 14px;
+            color: #767676;
+        }
+        
+        .content-container {
+            display: flex;
+            gap: 30px;
+        }
+        
+        .main-content {
+            flex: 2;
+        }
+        
+        .article-body {
+            font-size: 18px;
+            line-height: 1.6;
+        }
+        
+        .article-body p {
+            margin-bottom: 20px;
+        }
+        
+        .image-comparison-container {
+            position: relative;
+            width: 100%;
+            height: 500px;
+            overflow: hidden;
+            margin: 30px 0;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            border-radius: 3px;
+        }
+        
+        .image-comparison-before, 
+        .image-comparison-after {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-size: cover;
+            background-position: center;
+        }
+        
+        .image-comparison-before {
+            background-image: url('https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80');
+            z-index: 2;
+            clip-path: polygon(0 0, 50% 0, 50% 100%, 0% 100%);
+        }
+        
+        .image-comparison-after {
+            background-image: url('https://images.unsplash.com/photo-1500648767791-00dcc994a43e?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80');
+            z-index: 1;
+        }
+        
+        .comparison-slider {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 4px;
+            height: 100%;
+            background-color: transparent;
+            z-index: 3;
+            cursor: ew-resize;
+        }
+        
+        .slider-handle {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 40px;
+            height: 40px;
+            background-color: #00C98E;
+            border-radius: 50%;
+            display: flex;
+            align my-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+        
+        .comparison-label {
+            position: absolute;
+            top: 20px;
+            padding: 8px 15px;
+            background-color: rgba(0,0,0,0.7);
+            color: white;
+            font-size: 14px;
+            font-weight: 500;
+            z-index: 4;
+            border-radius: 3px;
+        }
+        
+        .before-label {
+            left: 20px;
+        }
+        
+        .after-label {
+            right: 20px;
+        }
+        
+        .image-caption {
+            font-size: 14px;
+            color: #767676;
+            margin-top: 10px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #dcdcdc;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 0px 5 0px;
+        }
+        
+        .control-btn {
+            background-color: #052962;margin: 0px;
+            color: white;
+            border: none;
+            padding: 10px 10px;
+            border-radius: 3px;
+            font-family: 'Guardian Text Sans', Arial, sans-serif;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .control-btn:hover {
+            background-color: #0DEDC9;
+        }
+        
+        .sidebar {
+            flex: 1;
+            padding-top: 20px;
+        }
+        
+        .sidebar-section {
+            margin-bottom: 40px;
+        }
+        
+        .sidebar-heading {
+            font-family: 'Guardian Egyptian', Georgia, serif;
+            font-size: 20px;
+            font-weight: 700;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #dcdcdc;
+        }
+        
+        .related-article {
+            display: flex;
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .related-article:last-child {
+            border-bottom: none;
+        }
+        
+        .related-article img {
+            width: 80px;
+            height: 60px;
+            object-fit: cover;
+            margin-right: 15px;
+        }
+        
+        .related-article h3 {
+            font-size: 16px;
+            line-height: 1.3;
+        }
+        
+        .footer {
+            margin-top: 50px;
+            padding-top: 20px;
+            border-top: 1px solid #dcdcdc;
+            font-size: 14px;
+            color: #767676;
+            text-align: center;
+        }
+        
+        @media (max-width: 768px) {
+            .content-container {
+                flex-direction: column;
+            }
+            
+            h1 {
+                font-size: 32px;
+            }
+            
+            .image-comparison-container {
+                height: 400px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+    
+                
+                <div class="image-comparison-container" id="comparisonContainer">
+                    <div class="image-comparison-before" id="beforeImage"></div>
+                    <div class="image-comparison-after" id="afterImage"></div>
+                    <div class="comparison-slider" id="comparisonSlider">
+                        <div class="slider-handle">↔</div>
+                    </div>
+                    <div class="comparison-label before-label">Before</div>
+                    <div class="comparison-label after-label">After</div>
+                </div>
+                
+              
+                
+                <div class="controls">
+                    <button class="control-btn" id="resetBtn">Reset</button>
+                    <button class="control-btn" id="toggleBtn">Toggle</button>
+                    <button class="control-btn" id="fullBeforeBtn"> Before Image</button>
+                    <button class="control-btn" id="fullAfterBtn"> After Image</button>
+                </div>
+                
+
+    </div>
+
+    <script>
+        // DOM elements
+        const comparisonContainer = document.getElementById('comparisonContainer');
+        const beforeImage = document.getElementById('beforeImage');
+        const afterImage = document.getElementById('afterImage');
+        const comparisonSlider = document.getElementById('comparisonSlider');
+        const resetBtn = document.getElementById('resetBtn');
+        const toggleBtn = document.getElementById('toggleBtn');
+        const fullBeforeBtn = document.getElementById('fullBeforeBtn');
+        const fullAfterBtn = document.getElementById('fullAfterBtn');
+        
+        // State variables
+        let isDragging = false;
+        let currentPosition = 50; // Start at 50%
+        
+        // Image URLs - using Unsplash images that look like different portraits of the same person
+        // In a real implementation, these would be robert.jpg and robert1.jpg
+        const beforeImageUrl = 'robert.jpg';
+        const afterImageUrl = 'robert1.jpg';
+        
+        // Initialize images
+        beforeImage.style.backgroundImage = `url('${beforeImageUrl}')`;
+        afterImage.style.backgroundImage = `url('${afterImageUrl}')`;
+        
+        // Update comparison based on position
+        function updateComparison(position) {
+            beforeImage.style.clipPath = `polygon(0 0, ${position}% 0, ${position}% 100%, 0% 100%)`;
+            comparisonSlider.style.left = `${position}%`;
+        }
+        
+        // Handle mouse/touch events for dragging
+        function startDragging(e) {
+            isDragging = true;
+            comparisonSlider.style.backgroundColor = '';
+            document.addEventListener('mousemove', onDrag);
+            document.addEventListener('touchmove', onDrag);
+            document.addEventListener('mouseup', stopDragging);
+            document.addEventListener('touchend', stopDragging);
+        }
+        
+        function onDrag(e) {
+            if (!isDragging) return;
+            
+            e.preventDefault();
+            const containerRect = comparisonContainer.getBoundingClientRect();
+            let clientX;
+            
+            if (e.type.includes('touch')) {
+                clientX = e.touches[0].clientX;
+            } else {
+                clientX = e.clientX;
+            }
+            
+            // Calculate position as percentage
+            const relativeX = clientX - containerRect.left;
+            let position = (relativeX / containerRect.width) * 100;
+            
+            // Keep within bounds
+            position = Math.max(0, Math.min(100, position));
+            
+            currentPosition = position;
+            updateComparison(position);
+        }
+        
+        function stopDragging() {
+            isDragging = false;
+            comparisonSlider.style.backgroundColor = '';
+            document.removeEventListener('mousemove', onDrag);
+            document.removeEventListener('touchmove', onDrag);
+            document.removeEventListener('mouseup', stopDragging);
+            document.removeEventListener('touchend', stopDragging);
+        }
+        
+        // Control button functions
+        resetBtn.addEventListener('click', () => {
+            currentPosition = 50;
+            updateComparison(currentPosition);
+        });
+        
+        toggleBtn.addEventListener('click', () => {
+            if (currentPosition === 0) {
+                currentPosition = 100;
+            } else if (currentPosition === 100) {
+                currentPosition = 0;
+            } else {
+                currentPosition = currentPosition > 50 ? 0 : 100;
+            }
+            updateComparison(currentPosition);
+        });
+        
+        fullBeforeBtn.addEventListener('click', () => {
+            currentPosition = 100;
+            updateComparison(currentPosition);
+        });
+        
+        fullAfterBtn.addEventListener('click', () => {
+            currentPosition = 0;
+            updateComparison(currentPosition);
+        });
+        
+        // Initialize slider position
+        updateComparison(currentPosition);
+        
+        // Add event listeners for dragging
+        comparisonSlider.addEventListener('mousedown', startDragging);
+        comparisonSlider.addEventListener('touchstart', startDragging);
+        
+        // Make the entire container draggable on mobile for better UX
+        comparisonContainer.addEventListener('touchstart', function(e) {
+            // Only trigger if not on the slider handle
+            if (e.target !== comparisonSlider && !comparisonSlider.contains(e.target)) {
+                startDragging(e);
+            }
+        });
+        
+        // Keyboard controls for accessibility
+        document.addEventListener('keydown', (e) => {
+            if (e.target.tagName === 'BUTTON') return; // Don't interfere with button controls
+            
+            switch(e.key) {
+                case 'ArrowLeft':
+                    currentPosition = Math.max(0, currentPosition - 5);
+                    updateComparison(currentPosition);
+                    break;
+                case 'ArrowRight':
+                    currentPosition = Math.min(100, currentPosition + 5);
+                    updateComparison(currentPosition);
+                    break;
+                case 'Home':
+                    currentPosition = 0;
+                    updateComparison(currentPosition);
+                    break;
+                case 'End':
+                    currentPosition = 100;
+                    updateComparison(currentPosition);
+                    break;
+                case ' ':
+                case 'Enter':
+                    // Toggle between before/after
+                    currentPosition = currentPosition > 50 ? 0 : 100;
+                    updateComparison(currentPosition);
+                    break;
+            }
+        });
+        
+        // Add focus styles for accessibility
+        comparisonSlider.setAttribute('tabindex', '0');
+        comparisonSlider.addEventListener('focus', () => {
+            comparisonSlider.style.outline = '2px solid #052962';
+            comparisonSlider.style.outlineOffset = '2px';
+        });
+        
+        comparisonSlider.addEventListener('blur', () => {
+            comparisonSlider.style.outline = 'none';
+        });
+    </script>
+<img src="global2.jpg">
+<p style=" font-size: 2vw;">
+    Source: IPCC (2021), Figure 9.27 – Climate Change 2021: The Physical Science Basis
+</p>
+<p>
+<b>Are we heading towards an underwater world?</b>     <br>
+The rising sea levels aren't just an abstract idea – they’re already having an undeniable impact here and everywhere else around the world.  <br>
+ We’re witnessing an alarming trend: our coastlines aren’t just  shifting; they’re rising.      <br>
+This isn't just an issue affecting coastal communities; it’s threatening vital ecosystems, disrupting economies and raising profound questions about our future.   <br>
+  <br>
+
+
+<b>What is sea level rising? </b> <br>
+ Rising sea levels mean that our oceans are absorbing more water than they can naturally hold  they're simply getting bigger!  <br>
+ This isn’t an accidental process  scientists believe that warmer waters provide an extra layer of moisture which can contribute significantly.     <br>
+This warming creates an ocean current system which leads more water into lower latitudes which can disrupt sea levels as they rise as well
+  <br>
+
+<b>How is rising sea levels affecting us?</b>     <br>
+Here’s how rising sea levels impact our world:  <br>
+
+    <h2>Flooding:</h2> <p>Coastal communities often experience an increase in flooding during storms – especially heavy storms or an increase frequency as they happen.  <br>
+<b>
+   Floods are caused by:
+</b>  <br>
+
+<b>Warmer air</b> which holds more moisture and resulting into more intense rainfall.  <br>
+As the climate warms, the atmosphere can hold more moisture — which means when it rains, rainfall can be much heavier and more intense. 
+   <br>
+  <br>
+
+Melting glaciers and snow increase river discharge .
+   <br>
+
+Rising sea levels and  stronger storms which results into coastal flooding.
+  <br>
+
+
+<b>Examples :</b>  <br>
+
+
+<b>Pakistan (2022): </b>Monsoon rains worsened by warmer climate caused floods that affected 33 million people, destroyed crops, homes, and infrastructure.
+  <br><b>Germany & Belgium (2021): </b>Heavy rain led to catastrophic flooding, killing 200+ people and causing billions in damages.
+    <br>
+  <br>
+<img src="flood.jpg">
+<p style="font-size: 2vw;"> Source: NASA - Flooding on the Red Sea</p><p>
+A satellite image from NASA shows flooding over the Red River in Fargo, North Dakota / Moorhead, Minnesota — illustrating how river floods can affect towns and farmland. 
+  <br>
+  <br>
+
+Another NASA‑observed event: floods in Pakistan triggered by monsoon rains worsened by climate change, leaving large areas underwater. 
+ <p style="font-size:5vw ;">
+   <a href="https://earthobservatory.nasa.gov/images/45400/flooding-in-pakistan"> Learn More</a>
+     </p>
+ <p>
+
+Heavy floods destroy homes, farmland, infrastructure. They displace people, damage crops, and can lead to food shortages or economic hardship.
+  <br>
+
+
+
+    <h2>Erosion:</h2>  <p>Coastal land can erode more rapidly as sea levels rise, leading can be eroded landscapes  <br>
+
+    <h2>Habitat Loss:</h2>  <p>
+ The rise in sea levels can destroy vital habitats like mangrove forests and coral reefs that provide shelter and provide oxygen for many marine life species
+  <h2>Economic Disruptions:</h2>  <p>
+ From fishing and tourism industries impacting coastal economies, and property damage due water surge impacting infrastructure and businesses
+    <h2>Migration:</h2><p>  
+ People have an increased pressure to move as sea levels rise or coastal communities become submerged!
+
+<br>
+
+The primary culprit isn’t just climate change – while climate change definitely plays a role by increasing temperatures overall; warmer water causes an ocean current system which leads more water into lower latitudes that can disrupt sea levels as well.    <br>
+  <br>
+ We can also look into various other factors like deforestation and urban sprawl that adds land surface and creates more rainfall as well.
+
+
+   <h2>
+ Ecosystem and Biodiversity Impacts
+   </h2>
+   <p>
+   
+<h2><img src="reef.jpg">
+    1. Coral reefs — mass bleaching and decline</h2><p>
+
+Rising sea temperatures and ocean acidification stress corals — when too warm, corals expel the algae they rely on, turning white (bleaching) and often dying. 
+  <br>
+
+With coral loss, entire reef ecosystems collapse: many fish, invertebrates, and marine species lose their habitat, leading to sharp biodiversity decline. 
+  <br>
+
+Reefs are biodiversity hotspots — their degradation means huge losses in marine species diversity and ecosystem services (fisheries, coastal protection, etc.). 
+
+
+<h2>
+2. Tropical rainforests — deforestation and habitat fragmentation (e.g. Amazon Rainforest)
+</h2><p>
+Logging, agricultural expansion, and land conversion destroy and fragment forest habitats, removing home for many species. 
+  <br>
+
+For example, combined impacts of deforestation + climate change are projected to reduce Amazon tree-species richness by up to ~58% by 2050. 
+  <br>
+
+Fragmentation isolates animal and plant populations — reduces genetic diversity, disrupts species interactions (pollination, seed dispersal), making survival harder. 
+
+
+
+
+<h2>
+    <img src="pol.jpg">
+    3. Arctic ecosystems — melting sea ice and shifting species distributions</h2>
+<p>
+In the Arctic, rising temperatures are causing rapid sea-ice loss (declining ~12% per decade), which destroys habitat for ice-dependent animals like seals, walruses, and polar bears.   <br>
+
+
+As ice disappears, food webs shift: ice-algae (foundation of marine food chain) decline → fewer plankton/zooplankton → fewer fish → fewer predators. 
+  <br>
+
+Terrestrial Arctic ecosystems also change: shrubs and boreal species migrate north, altering tundra communities. Some high-Arctic species may lose their only habitats. 
+
+
+
+
+
+<h2>
+    
+    <img src="bram.jpg">
+    4. Small mammals lost due to sea-level rise and island habitat loss — e.g. Bramble Cay melomys</h2>
+<p>
+The Bramble Cay melomys was declared <b>extinct</b> ,its habitat, a tiny low-lying island, was overrun by rising sea levels and storm surges linked to climate change.   <br>
+
+
+This shows how vulnerable small, specialized island species are when their habitat literally disappears. It’s one of the first documented mammal extinctions primarily due to climate change. 
+
+
+
+
+<h2>5. Collapse of fish stocks due to overfishing — e.g. Atlantic cod collapse in the North Atlantic / Grand Banks</h2><p>
+
+Overexploitation (overfishing) reduced Atlantic cod populations to about 1% of historical levels in the early 1990s. 
+  <br>
+
+This dramatic decline didn’t only affect cod — many species that depended on cod (or competed with cod) were impacted, leading to broader marine ecosystem changes. 
+
+
+
+<h2>6. Insect declines on remote islands — e.g. native ants on Fiji
+</h2><p>
+A recent study found that 79% of Fiji’s native ant species are in decline — evidence that even remote, seemingly pristine ecosystems are being affected. 
+  <br>
+
+Insects are critical to ecosystem functions (pollination, nutrient cycling, decomposition). Their decline can weaken entire ecosystems and reduce resilience. 
+
+
+
+<h2>
+    <img src="bat.jpg">
+7. Loss of forest insect & butterfly diversity after deforestation — observed in tropical forests</h2>
+<p>
+Research shows that after deforestation and conversion to monoculture plantations, butterfly communities become dominated by dull-brown species — colourful species (often more specialized) decline or disappear. 
+  <br>
+
+Since butterflies are good indicators of overall ecosystem health (pollinators, prey, biodiversity), their decline signals serious ecosystem simplification and biodiversity loss. 
+
+
+
+
+
+<h2>8. Collapse or dramatic change of aquatic ecosystems after over-exploitation + other stressors — e.g. Aral Sea (historic example)</h2><p>
+
+The Aral Sea, once one of the largest lakes in the world, shrank dramatically after rivers feeding it were diverted for large-scale irrigation — leading to collapse of the lake ecosystem. 
+  <br>
+
+As the water receded, fish populations collapsed, wetlands disappeared — biodiversity including aquatic species, birds, and wetland plants was lost; the region shifted to dry, unproductive desert-steppe. 
+
+
+
+
+
+<h2>9. Alpine and mountain ecosystems — species forced uphill by climate warming, reducing habitat</h2><p>
+
+As temperatures rise, many alpine and mountain species must move to higher elevations (cooler zones).  <br>
+ But mountains have a top — once species reach the summit, they run out of habitat. 
+  <br>
+
+This “mountaintop squeeze” threatens animals and plants adapted to cold environments; some may go extinct if they can’t adapt or move. 
+
+   
+  <h2> 10. Global decline in vertebrate populations since 1970 — across many ecosystems</h2>
+<p>
+According to a recent large-scale analysis by WWF, populations of wild vertebrates (mammals, birds, reptiles, amphibians, fish) dropped by about 73% between 1970 and 2020. 
+  <br>
+
+The greatest losses were in freshwater habitats (fish, amphibians, etc.), but declines occurred across terrestrial, marine and freshwater ecosystems — signaling that biodiversity loss is global and systemic. 
+   
+ <h1>
+     
+     How climate change increases disease risks
+</h1><p>
+Warmer temperatures, changed rainfall, and milder winters allow vectors (mosquitoes, ticks, flies…) to survive longer, spread into new regions (higher latitudes or altitudes), and reproduce more — increasing disease risk.<br>
+<br>
+ 
+
+As a result, illnesses once mostly found in tropical regions are now appearing in temperate zones. <br>
+<br>
+
+
+Also, changing precipitation and extreme weather events — floods, droughts — affect water, sanitation, and human‑vector contact, opening new pathways for disease. 
+
+
+
+<h2> Key Diseases / Vectors Affected by Global Warming   </h2>
+   
+   <p>
+   Dengue fever & other Aedes-mosquito‑borne diseases
+ <br>
+
+Dengue is transmitted by mosquitoes of the genus Aedes (especially Aedes aegypti, Aedes albopictus). 
+<br>
+
+Climate change — warmer, wetter conditions — has allowed those mosquitoes to expand their habitat northward (into regions previously too cold) and lengthen their active seasons. 
+<br>
+<br>
+
+This raises the risk of dengue outbreaks (and other Aedes-borne diseases like chikungunya, Zika, yellow fever) in regions that didn’t face them before. 
+
+
+<h2>
+    <img src="cul.jpg">
+Malaria (and other Anopheles‑mosquito diseases
+   </h2>
+   <p>
+  
+  Malaria is transmitted via infected Anopheles mosquitoes. 
+ <br>
+<br>
+
+As climates warm and seasons lengthen, areas that were once too cold for these mosquitoes — such as higher-altitude or more temperate zones — may become suitable for their survival and breeding. 
+<br>
+<br>
+
+This could lead to a north‑ or upslope (higher altitude) expansion of malaria risk zones, affecting populations with no prior exposure. 
+
+
+  
+  
+  <h2>
+<img src="ly.jpg">
+  Lyme disease (tick‑borne)
+  </h2><p>
+Lyme disease is transmitted by ticks (especially of the genus Ixodes). 
+ <br>
+
+Warmer temperatures and milder winters allow ticks to survive longer and live in regions previously too cold. 
+<br>
+<br>
+
+This expands the period each year when people are at risk, and increases the geographic zones where Lyme disease can occur. 
+
+
+
+<h2>
+    <img src="mal.jpg">
+West Nile virus disease and other Culex‑mosquito diseases
+</h2><p>
+West Nile virus (WNV) is transmitted by mosquitoes such as those of genus Culex. 
+ <br>
+
+As habitats for these mosquitoes expand due to warming, WNV risk zones may spread to new areas. 
+<br>
+<br>
+
+Warmer and longer summers can increase the mosquito population and lengthen the period of virus transmission. 
+<br>
+<br>
+
+
+ <b>Other Emerging or Resurgent Threats</b>
+<br>
+<br>
+
+Climate change also affects other disease‑vectors such as sandflies, midges, and other biting insects, which can spread diseases like Leishmaniasis, or diseases in livestock. 
+
+
+<h2>
+    <img src="mai.jpg">
+    Climate Change and Carbon Effect On Agriculture
+</h2>
+
+
+<p>
+ Carbon and Greenhouse Gases in Agriculture
+ <br>
+<br>
+
+Agriculture both contributes to climate change and is impacted by it.
+<br>
+
+The sector emits significant amounts of greenhouse gases — mainly carbon dioxide (CO₂), methane (CH₄) and nitrous oxide (N₂O).<br>
+ These gases trap heat in the atmosphere and accelerate global warming. <br><br>
+
+Agriculture contributes roughly 21–37 % of total human greenhouse gas emissions when the whole food system (production, processing, transport, waste) is considered. 
+<br>
+<br>
+
+CO₂ itself enters the atmosphere primarily through:
+<br>
+
+Deforestation for farmland, which releases carbon stored in trees,
+
+Fuel use for machinery, and
+
+Soil disturbance that releases carbon stored in soils. 
+<br>
+<br>
+
+
+Methane, a much more potent heat-trapping gas, comes mainly from:
+
+Livestock digestion (enteric fermentation) and manure,
+
+Rice paddy cultivation in flooded fields. 
+<br>
+<br>
+
+
+Nitrous oxide — even more powerful than CO₂ — is released largely through:
+
+Fertilizer application and soil management practices. 
+<br>
+<br>
+
+
+These gases increase atmospheric heat, raising global temperatures and altering climate patterns, which strongly affect agriculture.
+
+
+️ <h2>Direct Impacts on Crop Yields and Productivity</h2>
+<p>
+Rising atmospheric CO₂ and global temperatures can cause:
+ <br>
+
+ Lower Yields
+
+Heat stress can reduce photosynthesis and crop development rates.
+<br>
+
+Some studies project significant declines in staple crop yields, even with adaptation.<br>
+ For example, maize, wheat, and soy yields could fall substantially under continued warming. 
+<br>
+
+
+<h2>Altered Growing Seasons
+</h2><p>
+Warmer temperatures can shift planting and harvest times, sometimes too quickly for farmers to adapt.
+
+ <br>
+<br>
+
+️ Droughts, Floods, and Weather Extremes
+ <br>
+
+Extreme climate events — droughts, heat waves, and floods — damage crops and reduce reliable agricultural production. 
+<br>
+
+
+ Reduced Food Quality
+
+Elevated CO₂ can reduce the nutritional content of crops like wheat and rice, lowering protein and mineral levels. 
+
+<br>
+
+
+
+ Soils, Water, and Carbon Storage
+
+Healthy soils store carbon, which helps regulate the climate<br>
+. But intensive agriculture can degrade soil and release that stored carbon, worsening warming — a negative feedback loop. 
+<br>
+<br>
+
+Water resources are stressed by climate change, affecting irrigation and crop survivability. Warmer conditions also increase water demand by crops and livestock.
+
+<h2>
+Intergovernmental Panel on Climate Change (IPCC)</h2><p>
+The IPCC — the leading global scientific authority on climate — repeatedly reports that agriculture is both a significant source of greenhouse gas emissions and highly vulnerable to climate impacts.<br>
+<br>
+ Rising CO₂ and warming are projected to reduce agricultural productivity in many areas without ambitious mitigation and adaptation. 
+<br>
+<br>
+
+United Nations (UN)
+The UN highlights that climate extremes are already reducing crop yields and soil fertility, pushing millions toward hunger and requiring urgent emission reductions and resilient farming practices. 
+
+<h2>
+ Empty plates,Broken hopes, The human cost of famine
+</h2><p>
+A famine is an extreme form of food insecurity in which large segments of a population face starvation, malnutrition, and high mortality because food is unavailable or inaccessible.   <br>
+<br>
+The United Nations (UN) uses strict criteria to declare famine in a region, including:
+<br>
+<br>
+
+At least 20 % of people facing extreme hunger,
+
+30 % of children malnourished,
+
+A doubling of death rates beyond normal levels.<br>
+<br>
+
+These criteria reflect a failure of food systems and access rather than just a shortfall of food itself. <br>
+<br>
+
+Scientific studies in journals such as Nature and publications by organizations like the U.S. Department of Agriculture (USDA) and FAO (Food and Agriculture Organization) corroborate that greenhouse gas emissions from agriculture contribute to warming and that rising temperatures threaten future food production and nutritional quality. <br>
+<h2>
+  Waters fading:The Urgent Crisis Of Drying Planet
+</h2>
+<img src="late.jpg"><p style="font-size: 2vw;">
+    Lake Mead Supplies water to nearly 25million people across the American West.Photograph:NASA
+</p>
+ <p>
+  Water bodies such as lakes, rivers, and reservoirs are shrinking or drying in many regions of the world. <br>
+<br>
+This includes the dramatic retreat of large inland lakes (like those in Central Asia and the U.S. Southwest) and smaller reservoirs that people depend on for drinking water, irrigation, and ecosystems. 
+
+
+<h2>️ Why Are Water Bodies Drying Out?</h2>
+<p>
+<b>1. Climate Warming and Increased Evaporation
+</b>
+One of the main drivers is global warming, caused primarily by increased concentrations of carbon dioxide (CO₂) and other greenhouse gases in the atmosphere due to human activities (such as burning fossil fuels and deforestation).<br>
+ More greenhouse gases trap additional heat, leading to higher global temperatures.
+<br>
+<br>
+
+Warmer air accelerates evaporation from lakes and rivers.<br>
+ When evaporation exceeds the amount of water entering a basin from rain or rivers, lakes lose water faster than they can refill. 
+ <br>
+<br>
+
+Scientists have found that more than half of the world’s largest lakes and reservoirs have shrunk over recent decades, and warming and climatic change are key contributors. 
+
+
+<b>2. Reduced Inflow and Hydrological Changes
+</b><br>
+
+Climate change also alters precipitation patterns — some regions get less rain and snowfall, reducing the water supplied to lakes and rivers. At the same time, higher temperatures make the atmosphere “thirstier”, drawing more moisture from soils and surface water. 
+
+For many water bodies, inflow from rivers and ground sources is not keeping up with losses from evaporation and human use, meaning lakes shrink or dry out entirely. 
+
+
+<b>3. Human Water Use and Land Management</b>
+ <br>
+
+While carbon-driven warming is a major factor, water bodies are also affected by water diversion, irrigation, damming, and over-extraction for agriculture and cities. These activities reduce the water that reaches lakes and rivers, worsening drying trends. 
+
+
+<h2> Role of Carbon in the Environment and Drying Water Bodies</h2>
+<br>
+<p>
+The connection between carbon and drying water bodies lies in climate change:
+<br>
+
+Carbon dioxide (CO₂) accumulates in the atmosphere from human activities like burning fossil fuels.
+<br>
+
+CO₂ and other greenhouse gases trap heat that would normally escape to space.
+<br>
+
+This extra heat warms the planet, including land and water surfaces.
+
+<br>
+<br>
+
+As the world warms, water evaporates more quickly from lakes and rivers. In many regions, precipitation patterns shift, leading to longer droughts or reduced runoff from snowmelt and rain into water bodies. The result is that lakes lose more water than they receive, causing shrinkage over time. 
+<br>
+<br>
+
+This change in water balance — more evaporation, less refill — is directly tied to carbon-driven climate change and is observed worldwide.
+
+
+<h2> What Scientists and Research Say</h2>
+<p>
+Fangfang Yao and colleagues (University of Colorado Boulder) used satellite data to study nearly 2,000 lakes from 1992–2020 and found that about 53% have shrunk significantly, largely due to climate warming and human water use. 
+ <br>
+<br>
+
+On the climate science consensus level, scientists warn that limiting warming to 1.5 °C above pre-industrial averages is essential to slow many impacts of climate change, including accelerated evaporation and drying of water bodies. 
+<br>
+<br>
+
+Furthermore, research such as that described by the International Atomic Energy Agency (IAEA) shows that higher temperatures increase evaporation from lakes faster than water can be replenished, risking long-term disappearance of some lakes that cannot balance evaporation losses. 
+
+
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+      <div id="freezeWarning" class="freeze-warning">
+        <button class="close-warning" onclick="closeWarning('freezeWarning')">×</button>
+        <div class="warning-content">❄️ EXTREME COLD WARNING<br>Temperature: -50°C</div>
+    </div>
+    
+    <div id="warning40" class="warning-message">
+        <button class="close-warning" onclick="closeWarning('warning40')">×</button>
+        <div class="warning-content">⚠️ 40°C REACHED<br>Human survival threatened</div>
+    </div>
+    
+    <div id="warning50" class="warning-message">
+        <button class="close-warning" onclick="closeWarning('warning50')">×</button>
+        <div class="warning-content">☠️ 50°C REACHED<br>Water sources evaporating</div>
+    </div>
+    
+    <div id="warning60" class="warning-message">
+        <button class="close-warning" onclick="closeWarning('warning60')">×</button>
+        <div class="warning-content">💀 60°C REACHED<br>Most life cannot survive</div>
+    </div>
+    
+    <div id="warning70" class="warning-message">
+        <button class="close-warning" onclick="closeWarning('warning70')">×</button>
+        <div class="warning-content">🔥 70°C REACHED<br>Oceans boiling at surface</div>
+    </div>
+    
+    <div id="warning80" class="warning-message">
+        <button class="close-warning" onclick="closeWarning('warning80')">×</button>
+        <div class="warning-content">☄️ 80°C REACHED<br>Human civilization ends</div>
+    </div>
+    
+    <div id="warning100" class="warning-message">
+        <button class="close-warning" onclick="closeWarning('warning100')">×</button>
+        <div class="warning-content">💀 100°C REACHED<br>All complex life extinct</div>
+    </div>
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+	<script type="text/javascript" src="global.js"></script>
+
+  
+</body>
+</html>
