@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -16,6 +17,7 @@
             justify-content: center;
             color: #F1F8E9;
             margin: 0;
+            scroll-behavior: smooth;
         }
         
         .auth-section {
@@ -27,6 +29,7 @@
             padding: 2rem;
             text-align: center;
             box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            margin: 20px;
         }
         
         h1 {
@@ -36,6 +39,70 @@
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
+
+        /* Username System Styles */
+        #username-setup {
+            display: none;
+            margin-top: 20px;
+            text-align: left;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        .input-group { position: relative; margin-bottom: 15px; }
+
+        #usernameInput {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: 2px solid #ccc;
+            background: rgba(255,255,255,0.9);
+            color: #333;
+            font-size: 1rem;
+            outline: none;
+        }
+
+        #usernameInput.valid { border-color: #4CAF50; box-shadow: 0 0 10px rgba(76,175,80,0.5); }
+        #usernameInput.invalid { border-color: #f44336; }
+
+        .status-msg { font-size: 0.85rem; margin-top: 5px; font-weight: bold; }
+        .status-msg.green { color: #81C784; }
+        .status-msg.red { color: #E57373; }
+
+        .suggestions {
+            background: rgba(0,0,0,0.2);
+            padding: 10px;
+            border-radius: 10px;
+            margin-top: 10px;
+        }
+
+        .suggestion-item {
+            display: block;
+            padding: 8px;
+            margin: 4px 0;
+            background: rgba(255,255,255,0.1);
+            border-radius: 5px;
+            cursor: pointer;
+            transition: 0.3s;
+            color: #C8E6C9;
+        }
+
+        .suggestion-item:hover { background: rgba(76,175,80,0.3); }
+
+        #finishBtn {
+            width: 100%;
+            padding: 12px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 15px;
+        }
+
+        #finishBtn:disabled { background: #555; cursor: not-allowed; }
         
         #loginBtn {
             margin-top: 20px;
@@ -51,10 +118,6 @@
             transition: background 0.3s;
         }
         
-        #loginBtn:hover {
-            background: #45a049;
-        }
-        
         #toast {
             position: fixed;
             bottom: 20px;
@@ -65,26 +128,36 @@
             display: none;
             z-index: 1000;
         }
-        
         #toast.success { background: #4CAF50; }
         #toast.error { background: #d32f2f; }
-        #toast.warning { background: #ff9800; }
-
-        /* Ensure FirebaseUI buttons look good in the container */
-        #firebaseui-auth-container {
-            margin-top: 20px;
-        }
     </style>
 </head>
 <body>
 
-<section class="auth-section">
+<section class="auth-section" id="main-card">
     <h1>CarbonKind</h1>
-    <p>Sign in to continue</p>
-    
-    <div id="firebaseui-auth-container"></div>
+    <div id="auth-ui-wrapper">
+        <p>Sign in to continue</p>
+        <div id="firebaseui-auth-container"></div>
+        <button id="loginBtn">Login</button>
+    </div>
 
-    <button id="loginBtn">Login</button>
+    <div id="username-setup">
+        <h3>Choose your Unique Name</h3>
+        <p style="font-size: 0.9rem; opacity: 0.8;">This is the final step to secure your account.</p>
+        
+        <div class="input-group">
+            <input type="text" id="usernameInput" placeholder="Enter username..." autocomplete="off">
+            <div id="statusMsg" class="status-msg"></div>
+        </div>
+
+        <div id="suggestionBox" style="display:none;">
+            <p style="font-size: 0.8rem; margin-bottom: 5px;">Taken! Try one of these:</p>
+            <div class="suggestions" id="suggestionsList"></div>
+        </div>
+
+        <button id="finishBtn" disabled>Finish Sign Up</button>
+    </div>
 </section>
 
 <div id="toast"></div>
@@ -102,6 +175,13 @@ firebase.initializeApp({
     appId: "1:209882344898:web:212ed39d768a112d727a5b"
 });
 
+const auth = firebase.auth();
+let currentUser = null;
+
+/* ================= SIMULATED TAKEN NAMES ================= */
+// In a real app, you'd check your database here
+const takenUsernames = ["admin", "earth", "nature", "green", "carbon", "Hack.V", "test.G"];
+
 /* ================= TOAST ================= */
 function showToast(msg, type) {
     const t = document.getElementById("toast");
@@ -111,73 +191,135 @@ function showToast(msg, type) {
     setTimeout(() => t.style.display = "none", 3000);
 }
 
+/* ================= USERNAME LOGIC ================= */
+const usernameInput = document.getElementById('usernameInput');
+const statusMsg = document.getElementById('statusMsg');
+const suggestionBox = document.getElementById('suggestionBox');
+const suggestionsList = document.getElementById('suggestionsList');
+const finishBtn = document.getElementById('finishBtn');
+
+usernameInput.addEventListener('input', () => {
+    validateUsername(usernameInput.value);
+});
+
+function validateUsername(name) {
+    if (name.length < 2) {
+        statusMsg.textContent = "";
+        finishBtn.disabled = true;
+        usernameInput.classList.remove('valid', 'invalid');
+        return;
+    }
+
+    if (takenUsernames.includes(name)) {
+        usernameInput.classList.add('invalid');
+        usernameInput.classList.remove('valid');
+        statusMsg.textContent = "Username already exists";
+        statusMsg.className = "status-msg red";
+        finishBtn.disabled = true;
+        generateSuggestions(name);
+    } else {
+        usernameInput.classList.add('valid');
+        usernameInput.classList.remove('invalid');
+        statusMsg.textContent = "Username is available!";
+        statusMsg.className = "status-msg green";
+        suggestionBox.style.display = "none";
+        finishBtn.disabled = false;
+    }
+}
+
+function generateSuggestions(name) {
+    let suggestions = [];
+    const suffixes = [".env", ".nature", ".guard", ".carbon", ".kind"];
+    const sym = ["_", ".", "-"];
+    
+    // #1 & #2 Logic: s/z swap and two-name logic
+    let base = name;
+    if (name.toLowerCase().endsWith('s')) {
+        base = name.slice(0, -1) + 'z';
+    } else if (name.toLowerCase().endsWith('z')) {
+        base = name.slice(0, -1) + 's';
+    } else if (name.includes(" ")) {
+        let parts = name.split(" ");
+        base = parts[0] + "." + parts[1].charAt(0).toUpperCase();
+    } else {
+        base = name + "X"; // Creative alt if no s/z or space
+    }
+
+    // Add variations
+    suggestions.push(base); 
+    suggestions.push(name + suffixes[Math.floor(Math.random() * suffixes.length)]);
+    suggestions.push(name + Math.floor(10 + Math.random() * 90)); // 2 numbers
+    suggestions.push(name + Math.floor(100 + Math.random() * 899)); // 3 numbers
+    suggestions.push(name + sym[Math.floor(Math.random() * sym.length)] + "seed");
+
+    suggestionsList.innerHTML = "";
+    suggestions.forEach(s => {
+        const div = document.createElement('div');
+        div.className = "suggestion-item";
+        div.textContent = s;
+        div.onclick = () => selectSuggestion(s);
+        suggestionsList.appendChild(div);
+    });
+    suggestionBox.style.display = "block";
+}
+
+function selectSuggestion(name) {
+    usernameInput.value = name;
+    window.scrollTo(0, 0); // Scroll up to see input
+    validateUsername(name); // Check if suggestion is also taken (Recursive check)
+}
+
 /* ================= FIREBASE UI ================= */
-const ui = new firebaseui.auth.AuthUI(firebase.auth());
+const ui = new firebaseui.auth.AuthUI(auth);
+
+function startUsernamePhase(user) {
+    currentUser = user;
+    document.getElementById('auth-ui-wrapper').style.display = 'none';
+    document.getElementById('username-setup').style.display = 'block';
+    
+    // Pre-fill with email prefix
+    if (!usernameInput.value) {
+        usernameInput.value = user.email.split('@')[0];
+        validateUsername(usernameInput.value);
+    }
+}
 
 ui.start("#firebaseui-auth-container", {
     signInFlow: "popup",
     signInOptions: [
-        // ADDED GOOGLE PROVIDER HERE
         firebase.auth.GoogleAuthProvider.PROVIDER_ID,
-        firebase.auth.EmailAuthProvider.PROVIDER_ID,
-        firebase.auth.GithubAuthProvider.PROVIDER_ID
+        firebase.auth.EmailAuthProvider.PROVIDER_ID
     ],
     callbacks: {
         signInSuccessWithAuthResult: function(authResult) {
-            const user = authResult.user;
-            
-            if (!user.displayName) {
-                const defaultName = user.email.split('@')[0];
-                const newUsername = prompt("Please enter a username for CarbonKind:", defaultName);
-                
-                if (newUsername && newUsername.trim() !== '') {
-                    user.updateProfile({ 
-                        displayName: newUsername.trim() 
-                    }).then(() => {
-                        window.location.href = "paper8.html";
-                    }).catch((error) => {
-                        console.error("Error setting display name:", error);
-                        window.location.href = "paper8.html";
-                    });
-                    return false;
-                }
-            }
-
-            window.location.href = "paper8.html";  
+            startUsernamePhase(authResult.user);
             return false; 
-        },
-        signInFailure: function(error) {
-            console.error("Sign in failed:", error);
-            showToast(`Sign in failed: ${error.message}`, "error");
-            return Promise.resolve();
         }
     }
 });
 
-/* ================= MANUAL LOGIN BUTTON ================= */
-async function manualLogin() {
-    const email = document.querySelector('input[type="email"]')?.value;
-    const password = document.querySelector('input[type="password"]')?.value;
+finishBtn.onclick = () => {
+    const finalName = usernameInput.value;
+    currentUser.updateProfile({ displayName: finalName }).then(() => {
+        showToast("Profile Updated!", "success");
+        setTimeout(() => window.location.href = "paper8.html", 1000);
+    });
+};
 
-    if (!email || !password) {
-        showToast("Enter email and password", "warning");
-        return;
+/* ================= MANUAL LOGIN ================= */
+document.getElementById("loginBtn").addEventListener("click", () => {
+    showToast("Please use the sign-in options above", "error");
+});
+
+// If already logged in but no display name, trigger username phase
+auth.onAuthStateChanged(user => {
+    if (user) {
+        if (!user.displayName) {
+            startUsernamePhase(user);
+        } else {
+            window.location.href = "paper8.html";
+        }
     }
-
-    try {
-        const res = await firebase.auth().signInWithEmailAndPassword(email, password);
-        showToast("Login successful", "success");
-        setTimeout(() => location.href = "paper8.html", 800);
-    } catch (e) {
-        showToast("Invalid login", "error");
-    }
-}
-
-document.getElementById("loginBtn").addEventListener("click", manualLogin);
-
-/* ================= AUTO REDIRECT IF LOGGED IN ================= */
-firebase.auth().onAuthStateChanged(user => {
-    if (user) location.href = "paper8.html";
 });
 </script>
 </body>
