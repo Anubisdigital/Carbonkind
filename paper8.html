@@ -1,0 +1,908 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CarbonKind - Green Social Network</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* ====== CSS Variables & Reset ====== */
+        :root {
+            --primary-green: #0A433A;
+            --secondary-green: #1B5E20;
+            --light-green: #4CAF50;
+            --pale-green: #C8E6C9;
+            --background: #F1F8E9;
+            --card-bg: #FFFFFF;
+            --text-dark: #1B5E20;
+            --text-light: #F1F8E9;
+            --shadow: 0 4px 12px rgba(0, 100, 0, 0.1);
+            --radius: 12px;
+            --spacing-sm: 8px;
+            --spacing-md: 16px;
+            --spacing-lg: 24px;
+            --spacing-xl: 32px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+        }
+
+        body {
+            background-color: var(--background);
+            color: var(--text-dark);
+            line-height: 1.6;
+        }
+
+        /* ====== Layout ====== */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 var(--spacing-md);
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--primary-green), var(--secondary-green));
+            color: var(--text-light);
+            padding: var(--spacing-md) 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+        }
+
+        .logo h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+
+        .logo i {
+            color: var(--light-green);
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-md);
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--light-green);
+        }
+
+        .user-name {
+            font-weight: 600;
+        }
+
+        .logout-btn {
+            background: transparent;
+            border: 1px solid var(--light-green);
+            color: var(--text-light);
+            padding: var(--spacing-sm) var(--spacing-md);
+            border-radius: var(--radius);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .logout-btn:hover {
+            background-color: rgba(76, 175, 80, 0.2);
+        }
+
+        main {
+            padding: var(--spacing-xl) 0;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: var(--spacing-xl);
+        }
+
+        @media (min-width: 768px) {
+            main {
+                grid-template-columns: 2fr 1fr;
+            }
+        }
+
+        /* ====== Create Post Section ====== */
+        .create-post-section {
+            background-color: var(--card-bg);
+            border-radius: var(--radius);
+            padding: var(--spacing-lg);
+            box-shadow: var(--shadow);
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .create-post-section h2 {
+            margin-bottom: var(--spacing-md);
+            color: var(--primary-green);
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+        }
+
+        #post-form {
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-md);
+        }
+
+        #post-text {
+            width: 100%;
+            min-height: 100px;
+            padding: var(--spacing-md);
+            border: 1px solid #ddd;
+            border-radius: var(--radius);
+            resize: vertical;
+            font-size: 1rem;
+            background-color: #f9f9f9;
+        }
+
+        #post-text:focus {
+            outline: none;
+            border-color: var(--light-green);
+            background-color: #fff;
+        }
+
+        #post-links {
+            padding: var(--spacing-md);
+            border: 1px solid #ddd;
+            border-radius: var(--radius);
+            font-size: 0.9rem;
+        }
+
+        .form-note {
+            font-size: 0.85rem;
+            color: #666;
+            font-style: italic;
+        }
+
+        .btn-primary {
+            background-color: var(--light-green);
+            color: white;
+            border: none;
+            padding: var(--spacing-md) var(--spacing-lg);
+            border-radius: var(--radius);
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--spacing-sm);
+        }
+
+        .btn-primary:hover {
+            background-color: var(--secondary-green);
+        }
+
+        .btn-primary:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+
+        /* ====== Posts Section ====== */
+        .posts-section h2 {
+            color: var(--primary-green);
+            margin-bottom: var(--spacing-lg);
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+        }
+
+        .posts-container {
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-lg);
+        }
+
+        .post-card {
+            background-color: var(--card-bg);
+            border-radius: var(--radius);
+            padding: var(--spacing-lg);
+            box-shadow: var(--shadow);
+            transition: transform 0.3s;
+        }
+
+        .post-card:hover {
+            transform: translateY(-4px);
+        }
+
+        .post-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: var(--spacing-md);
+        }
+
+        .post-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-right: var(--spacing-md);
+            border: 2px solid var(--pale-green);
+        }
+
+        .post-user-info {
+            flex-grow: 1;
+        }
+
+        .post-username {
+            font-weight: 600;
+            color: var(--primary-green);
+            cursor: pointer;
+            display: block;
+        }
+
+        .post-username:hover {
+            text-decoration: underline;
+        }
+
+        .post-time {
+            font-size: 0.85rem;
+            color: #666;
+        }
+
+        .post-content {
+            margin-bottom: var(--spacing-md);
+        }
+
+        .post-text {
+            margin-bottom: var(--spacing-md);
+            line-height: 1.6;
+        }
+
+        .post-links {
+            margin-top: var(--spacing-md);
+        }
+
+        .link-preview {
+            border: 1px solid #eee;
+            border-radius: var(--radius);
+            padding: var(--spacing-md);
+            margin-top: var(--spacing-sm);
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-sm);
+        }
+
+        .link-image {
+            max-width: 100%;
+            border-radius: 8px;
+            max-height: 300px;
+            object-fit: cover;
+        }
+
+        .link-url {
+            color: var(--light-green);
+            text-decoration: none;
+            word-break: break-all;
+        }
+
+        .link-url:hover {
+            text-decoration: underline;
+        }
+
+        .post-actions {
+            display: flex;
+            justify-content: space-between;
+            border-top: 1px solid #eee;
+            padding-top: var(--spacing-md);
+            margin-top: var(--spacing-md);
+        }
+
+        .action-btn {
+            background: none;
+            border: none;
+            color: #666;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+            padding: var(--spacing-sm) var(--spacing-md);
+            border-radius: var(--radius);
+            transition: all 0.3s;
+        }
+
+        .action-btn:hover {
+            background-color: #f5f5f5;
+            color: var(--primary-green);
+        }
+
+        .action-btn.liked {
+            color: #e53935;
+        }
+
+        .action-btn.reported {
+            color: #ff9800;
+        }
+
+        .comments-section {
+            margin-top: var(--spacing-md);
+            padding-top: var(--spacing-md);
+            border-top: 1px solid #eee;
+        }
+        
+        .comments-list {
+            /* Container for dynamically added comments */
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: var(--spacing-md);
+        }
+
+        .comment {
+            display: flex;
+            padding: var(--spacing-md);
+            background-color: #f9f9f9;
+            border-radius: var(--radius);
+        }
+
+        .comment-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-right: var(--spacing-md);
+        }
+
+        .comment-content {
+            flex-grow: 1;
+        }
+
+        .comment-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 4px;
+        }
+
+        .comment-user {
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .comment-time {
+            font-size: 0.8rem;
+            color: #666;
+        }
+
+        .comment-text {
+            font-size: 0.9rem;
+        }
+
+        .add-comment {
+            display: flex;
+            margin-top: var(--spacing-md);
+        }
+
+        .comment-input {
+            flex-grow: 1;
+            padding: var(--spacing-md);
+            border: 1px solid #ddd;
+            border-radius: var(--radius) 0 0 var(--radius);
+            font-size: 0.9rem;
+        }
+
+        .comment-btn {
+            background-color: var(--light-green);
+            color: white;
+            border: none;
+            padding: 0 var(--spacing-md);
+            border-radius: 0 var(--radius) var(--radius) 0;
+            cursor: pointer;
+        }
+
+        /* ====== Sidebar ====== */
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-lg);
+        }
+
+        .sidebar-section {
+            background-color: var(--card-bg);
+            border-radius: var(--radius);
+            padding: var(--spacing-lg);
+            box-shadow: var(--shadow);
+        }
+
+        .sidebar-section h3 {
+            color: var(--primary-green);
+            margin-bottom: var(--spacing-md);
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: var(--spacing-md);
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: var(--spacing-md);
+            background-color: #f5f5f5;
+            border-radius: var(--radius);
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-green);
+        }
+
+        .stat-label {
+            font-size: 0.85rem;
+            color: #666;
+        }
+
+        .user-list {
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-md);
+        }
+
+        .user-item {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-md);
+            padding: var(--spacing-sm);
+            border-radius: var(--radius);
+            transition: background-color 0.3s;
+        }
+
+        .user-item:hover {
+            background-color: #f5f5f5;
+        }
+
+        .user-item-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        /* ====== Loading & Empty States ====== */
+        .loading {
+            text-align: center;
+            padding: var(--spacing-xl);
+            color: #666;
+        }
+
+        .loading-spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid var(--light-green);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto var(--spacing-md);
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: var(--spacing-xl);
+            color: #666;
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            color: #ddd;
+            margin-bottom: var(--spacing-md);
+        }
+
+        /* ====== Toast Notifications ====== */
+        .toast-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-width: 350px;
+        }
+
+        .toast {
+            background-color: var(--card-bg);
+            border-radius: var(--radius);
+            padding: var(--spacing-md) var(--spacing-lg);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-md);
+            animation: slideIn 0.3s ease-out;
+            border-left: 4px solid var(--light-green);
+        }
+
+        .toast.success {
+            border-left-color: #4CAF50;
+        }
+
+        .toast.error {
+            border-left-color: #f44336;
+        }
+
+        .toast.warning {
+            border-left-color: #ff9800;
+        }
+
+        .toast.info {
+            border-left-color: #2196F3;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        .toast-message {
+            flex-grow: 1;
+        }
+
+        .toast-close {
+            background: none;
+            border: none;
+            color: #666;
+            cursor: pointer;
+            font-size: 1.2rem;
+        }
+
+        /* ====== Footer ====== */
+        footer {
+            background-color: var(--primary-green);
+            color: var(--text-light);
+            text-align: center;
+            padding: var(--spacing-lg);
+            margin-top: var(--spacing-xl);
+        }
+
+        /* ====== Mobile Responsiveness ====== */
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                gap: var(--spacing-md);
+            }
+
+            .user-info {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            main {
+                grid-template-columns: 1fr;
+            }
+
+            .post-actions {
+                flex-wrap: wrap;
+                gap: var(--spacing-sm);
+            }
+
+            .action-btn {
+                flex: 1;
+                justify-content: center;
+                min-width: 120px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fas fa-leaf"></i>
+                    <h1>CarbonKind</h1>
+                </div>
+                <div class="user-info">
+                    <img id="header-avatar" class="user-avatar" src="" alt="User Avatar">
+                    <span id="header-username" class="user-name"></span>
+                    <button id="logout-btn" class="logout-btn">Log Out</button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="posts-column">
+            <section class="create-post-section">
+                <h2><i class="fas fa-edit"></i> Create a New Post</h2>
+                <form id="post-form">
+                    <textarea id="post-text" placeholder="Share your eco-friendly thoughts or actions..." required></textarea>
+                    <input type="text" id="post-links" placeholder="Add links (separate with commas)">
+                    <p class="form-note">Note: Links to images or videos will be automatically embedded.</p>
+                    <button type="submit" class="btn-primary" id="submit-post">
+                        <i class="fas fa-paper-plane"></i> Post to CarbonKind
+                    </button>
+                </form>
+            </section>
+
+            <section class="posts-section">
+                <h2><i class="fas fa-newspaper"></i> Recent Posts</h2>
+                <div class="posts-container" id="posts-container">
+                    <div class="loading">
+                        <div class="loading-spinner"></div>
+                        <p>Loading posts...</p>
+                    </div>
+                </div>
+                <div id="loading-message" class="loading" style="display:none;">
+                    <div class="loading-spinner"></div>
+                    <p>Loading more posts...</p>
+                </div>
+            </section>
+        </div>
+
+        <div class="sidebar">
+            <section class="sidebar-section">
+                <h3><i class="fas fa-chart-line"></i> Your Impact</h3>
+                <div class="stats">
+                    <div class="stat-item">
+                        <div class="stat-value" id="post-count">0</div>
+                        <div class="stat-label">Posts</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="like-count">0</div>
+                        <div class="stat-label">Likes Given</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="comment-count">0</div>
+                        <div class="stat-label">Comments</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="carbon-saved">12.5</div>
+                        <div class="stat-label">kg CO₂ Saved</div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="sidebar-section">
+                <h3><i class="fas fa-users"></i> Active Green Heroes</h3>
+                <div class="user-list" id="active-users">
+                    </div>
+            </section>
+
+            <section class="sidebar-section">
+                <h3><i class="fas fa-lightbulb"></i> Green Tip of the Day</h3>
+                <p>Using a reusable water bottle can save an average of 156 plastic bottles per person each year. Small changes make a big difference!</p>
+            </section>
+        </div>
+    </main>
+
+    <div class="toast-container" id="toast-container"></div>
+
+    <footer>
+        <div class="container">
+            <p>CarbonKind &copy; 2023 - Building a greener community, one post at a time.</p>
+            <p>Together we can reduce our carbon footprint and promote sustainable living.</p>
+        </div>
+    </footer>
+
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+    <script>
+        // =========================================================
+        // PLACE THE OPTIMIZED JAVASCRIPT CODE HERE
+        // (Including the configuration and all functions)
+        // =========================================================// ================= FIREBASE CONFIGURATION =================
+ // ================= FIREBASE CONFIGURATION =================
+const firebaseConfig = {
+    apiKey: "AIzaSyD-YxRrtWHA4wEZc0_zTzoYhK4S5cJOJ34",
+    authDomain: "watchbase-d25ad.firebaseapp.com",
+    projectId: "watchbase-d25ad",
+    appId: "1:209882344898:web:212ed39d768a112d727a5b"
+};
+
+// Initialize Firebase
+if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+}
+const db = firebase.firestore();
+const auth = firebase.auth();
+
+// ================= STATE =================
+let currentUser = null;
+let isLoading = false;
+let allPostsLoaded = false;
+let lastVisible = null;
+const POSTS_PER_PAGE = 10;
+
+// ================= UTILITIES =================
+function generateAvatar(username) {
+    const colors = ['#0A433A', '#1B5E20', '#4CAF50', '#33691E'];
+    const color = colors[Math.floor(Math.random() * colors.length)];
+    const initials = (username || "CK").substring(0, 2).toUpperCase();
+    return `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect width="100" height="100" fill="${encodeURIComponent(color)}"/><text x="50%" y="50%" font-family="Arial" font-size="40" fill="white" text-anchor="middle" dy=".3em">${initials}</text></svg>`;
+}
+
+function formatTime(ts) {
+    if (!ts) return 'Just now';
+    const date = ts.toDate ? ts.toDate() : new Date(ts);
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ' - ' + date.toLocaleDateString();
+}
+
+function showToast(msg, type = 'info') {
+    const container = document.getElementById('toast-container');
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.innerHTML = `<div class="toast-message">${msg}</div>`;
+    container.appendChild(toast);
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        setTimeout(() => toast.remove(), 500);
+    }, 4000);
+}
+
+// ================= CORE ACTIONS =================
+async function fetchPosts(loadMore = false) {
+    if (isLoading || (loadMore && allPostsLoaded)) return;
+    isLoading = true;
+
+    const container = document.getElementById('posts-container');
+    const loadingMsg = document.getElementById('loading-message');
+    if (loadingMsg) loadingMsg.style.display = 'block';
+
+    try {
+        let query = db.collection('posts').orderBy('timestamp', 'desc').limit(POSTS_PER_PAGE);
+        if (loadMore && lastVisible) query = query.startAfter(lastVisible);
+
+        const snapshot = await query.get();
+        if (snapshot.empty) {
+            allPostsLoaded = true;
+            if (!loadMore) container.innerHTML = '<p class="empty-state">No posts yet. Be the first!</p>';
+            isLoading = false;
+            if (loadingMsg) loadingMsg.style.display = 'none';
+            return;
+        }
+
+        lastVisible = snapshot.docs[snapshot.docs.length - 1];
+        if (!loadMore) container.innerHTML = '';
+
+        snapshot.forEach(doc => {
+            renderPostCard({ id: doc.id, ...doc.data() }, container);
+        });
+
+    } catch (e) {
+        console.error("Fetch Error:", e);
+        showToast("Error loading feed", "error");
+    }
+    isLoading = false;
+    if (loadingMsg) loadingMsg.style.display = 'none';
+}
+
+async function handlePostSubmit(e) {
+    e.preventDefault(); // Stop page refresh
+    
+    if (!currentUser) {
+        showToast("You must be logged in to post", "error");
+        return;
+    }
+
+    const postTextField = document.getElementById('post-text');
+    const postLinksField = document.getElementById('post-links');
+    const btn = document.getElementById('submit-post');
+
+    const text = postTextField.value.trim();
+    const linksRaw = postLinksField.value.trim();
+
+    if (!text) {
+        showToast("Write something first!", "warning");
+        return;
+    }
+
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Posting...';
+
+    try {
+        await db.collection('posts').add({
+            userId: currentUser.uid,
+            username: currentUser.username,
+            avatar: currentUser.avatar,
+            text: text,
+            links: linksRaw ? linksRaw.split(',').map(l => l.trim()) : [],
+            timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+            likes: [],
+            comments: []
+        });
+
+        postTextField.value = '';
+        postLinksField.value = '';
+        showToast("Eco-action shared!", "success");
+        fetchPosts(false); // Refresh the feed
+    } catch (e) {
+        console.error("Post Error:", e);
+        showToast("Failed to post. Check permissions.", "error");
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-paper-plane"></i> Post to CarbonKind';
+    }
+}
+
+function renderPostCard(post, container) {
+    const card = document.createElement('div');
+    card.className = 'post-card';
+    card.innerHTML = `
+        <div class="post-header">
+            <img src="${post.avatar || generateAvatar(post.username)}" class="post-avatar">
+            <div class="post-user-info">
+                <span class="post-username">${post.username}</span>
+                <span class="post-time">${formatTime(post.timestamp)}</span>
+            </div>
+        </div>
+        <div class="post-content"><p>${post.text}</p></div>
+        <div class="post-actions">
+            <button class="action-btn" onclick="likePost('${post.id}')">
+                <i class="fas fa-thumbs-up"></i> <span>${post.likes ? post.likes.length : 0}</span>
+            </button>
+            <button class="action-btn">
+                <i class="fas fa-comment"></i> <span>${post.comments ? post.comments.length : 0}</span>
+            </button>
+        </div>
+    `;
+    container.appendChild(card);
+}
+
+// ================= INITIALIZATION =================
+document.addEventListener('DOMContentLoaded', () => {
+    // 1. Attach Form Listener immediately
+    const postForm = document.getElementById('post-form');
+    if (postForm) {
+        postForm.addEventListener('submit', handlePostSubmit);
+    }
+
+    // 2. Handle Authentication
+    auth.onAuthStateChanged(user => {
+        if (user) {
+            currentUser = {
+                uid: user.uid,
+                username: user.displayName || user.email.split('@')[0],
+                avatar: user.photoURL || generateAvatar(user.email)
+            };
+            document.getElementById('header-avatar').src = currentUser.avatar;
+            document.getElementById('header-username').textContent = currentUser.username;
+            fetchPosts();
+        } else {
+            // Uncomment the line below when your signup.html is ready
+            // window.location.href = 'signup.html';
+            console.log("No user logged in");
+        }
+    });
+
+    // 3. Logout Logic
+    document.getElementById('logout-btn').onclick = () => auth.signOut();
+
+    // 4. Infinite Scroll
+    window.onscroll = () => {
+        if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 500) {
+            fetchPosts(true);
+        }
+    };
+});
+
+    </script>
+</body>
+</html>
