@@ -1,0 +1,1415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CarbonKind - Carbon Footprint Calculator</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary-green: #2e7d32;
+            --light-green: #4caf50;
+            --dark-green: #1b5e20;
+            --lighter-green: #a5d6a7;
+            --background: #f1f8e9;
+            --card-bg: #ffffff;
+            --text-dark: #1b3c1f;
+            --text-light: #666;
+            --shadow: rgba(46, 125, 50, 0.1);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: var(--background);
+            color: var(--text-dark);
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        /* Header Styles */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 0;
+            border-bottom: 2px solid var(--lighter-green);
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+        
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .logo {
+            width: 60px;
+            height: 60px;
+            background-color: var(--dark-green);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 28px;
+        }
+        
+        .logo img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+        
+        .logo-placeholder {
+            font-weight: bold;
+        }
+        
+        h1 {
+            color: var(--dark-green);
+            font-size: 2.5rem;
+            font-weight: 700;
+        }
+        
+        /* Calculator Sections */
+        .calculator-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+        
+        @media (max-width: 992px) {
+            .calculator-container {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .form-section {
+            background-color: var(--card-bg);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 15px var(--shadow);
+            margin-bottom: 25px;
+            transition: all 0.3s ease;
+            border-left: 5px solid var(--light-green);
+        }
+        
+        .form-section h2 {
+            color: var(--primary-green);
+            margin-bottom: 20px;
+            font-size: 1.6rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .form-section h2 i {
+            background-color: var(--lighter-green);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .question-group {
+            margin-bottom: 20px;
+        }
+        
+        .question-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+        
+        select, input[type="number"], input[type="text"] {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border 0.3s;
+            background-color: #f9f9f9;
+        }
+        
+        select:focus, input:focus {
+            border-color: var(--light-green);
+            outline: none;
+        }
+        
+        .options-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .option-btn {
+            padding: 12px;
+            background-color: #f0f9f0;
+            border: 2px solid #c8e6c9;
+            border-radius: 8px;
+            cursor: pointer;
+            text-align: center;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+        
+        .option-btn:hover {
+            background-color: #e0f2e0;
+            transform: translateY(-2px);
+        }
+        
+        .option-btn.selected {
+            background-color: var(--light-green);
+            color: white;
+            border-color: var(--primary-green);
+        }
+        
+        .sub-options {
+            margin-top: 15px;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border-radius: 8px;
+            border-left: 3px solid var(--light-green);
+            display: none;
+        }
+        
+        .sub-options.active {
+            display: block;
+            animation: fadeIn 0.5s;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        /* Results Section */
+        .results-section {
+            background-color: var(--card-bg);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 15px var(--shadow);
+            margin-top: 20px;
+        }
+        
+        .results-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-top: 20px;
+        }
+        
+        @media (max-width: 768px) {
+            .results-container {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .emissions-summary {
+            padding: 20px;
+            background-color: #f0f9f0;
+            border-radius: 10px;
+        }
+        
+        .emissions-summary h3 {
+            color: var(--dark-green);
+            margin-bottom: 15px;
+        }
+        
+        .total-emissions {
+            font-size: 2.8rem;
+            font-weight: 800;
+            color: var(--primary-green);
+            text-align: center;
+            margin: 20px 0;
+        }
+        
+        .trees-needed {
+            background-color: var(--light-green);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            margin-top: 20px;
+            font-weight: 600;
+        }
+        
+        .trees-needed span {
+            font-size: 2rem;
+            display: block;
+            margin-top: 5px;
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 300px;
+        }
+        
+        /* Credit Section */
+        .credit-section {
+            text-align: center;
+            padding: 20px;
+            margin-top: 30px;
+            border-top: 1px solid #ddd;
+            font-style: italic;
+            color: var(--text-light);
+        }
+        
+        .credit-person {
+            color: var(--primary-green);
+            font-weight: 600;
+            margin-top: 5px;
+        }
+        
+        /* Button Styles */
+        .calculate-btn {
+            display: block;
+            width: 100%;
+            padding: 18px;
+            background-color: var(--primary-green);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.2rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            margin-top: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .calculate-btn:hover {
+            background-color: var(--dark-green);
+        }
+        
+        .reset-btn {
+            display: inline-block;
+            padding: 12px 25px;
+            background-color: #f5f5f5;
+            color: var(--text-dark);
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 15px;
+        }
+        
+        .reset-btn:hover {
+            background-color: #e0e0e0;
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 576px) {
+            .container {
+                padding: 15px;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .form-section {
+                padding: 20px;
+            }
+            
+            .options-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .results-container {
+                gap: 20px;
+            }
+        }
+        
+        /* Helper text */
+        .helper-text {
+            font-size: 0.9rem;
+            color: var(--text-light);
+            margin-top: 5px;
+            font-style: italic;
+        }
+        
+        .percentage-inputs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        
+        .percentage-group {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .percentage-group input {
+            margin-top: 5px;
+        }
+        
+        .percentage-status {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 5px;
+            font-weight: 600;
+            text-align: center;
+        }
+        
+        .percentage-status.valid {
+            background-color: #e8f5e9;
+            color: var(--dark-green);
+        }
+        
+        .percentage-status.invalid {
+            background-color: #ffebee;
+            color: #c62828;
+        }
+        
+        .percentage-status.warning {
+            background-color: #fff3e0;
+            color: #ef6c00;
+        }
+        
+        footer {
+            text-align: center;
+            padding: 20px;
+            margin-top: 40px;
+            color: var(--text-light);
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo-container">
+                <div class="logo">
+                    <!-- Placeholder for anubis.png - using leaf icon instead -->
+                    <i class="fas fa-leaf"></i>
+                </div>
+                <h1>CarbonKind</h1>
+            </div>
+            <p>Calculate your carbon footprint and make a difference</p>
+        </header>
+        
+        <div class="calculator-container">
+            <!-- Section 1: Transport -->
+            <div class="form-section">
+                <h2><i class="fas fa-car"></i> 1. Means of Transport</h2>
+                <div class="question-group">
+                    <label>Select your primary means of transport:</label>
+                    <div class="options-grid">
+                        <div class="option-btn" data-transport="car">Car</div>
+                        <div class="option-btn" data-transport="bicycle">Bicycle</div>
+                        <div class="option-btn" data-transport="feet">On Foot</div>
+                        <div class="option-btn" data-transport="other">Other</div>
+                    </div>
+                </div>
+                
+                <div class="sub-options" id="transport-suboptions">
+                    <!-- Options will be populated by JavaScript -->
+                </div>
+                
+                <div class="question-group">
+                    <label for="transport-distance">Daily Distance (km):</label>
+                    <input type="number" id="transport-distance" min="0" step="0.1" value="10">
+                    <p class="helper-text">Enter the average distance you travel daily with this transport</p>
+                </div>
+            </div>
+            
+            <!-- Section 2: Food -->
+            <div class="form-section">
+                <h2><i class="fas fa-utensils"></i> 2. Type of Food</h2>
+                <div class="question-group">
+                    <label>Select the type of food you consume most:</label>
+                    <div class="options-grid">
+                        <div class="option-btn" data-food="packed">Packed Food</div>
+                        <div class="option-btn" data-food="fresh">Fresh Food</div>
+                        <div class="option-btn" data-food="cooked">Cooked Food</div>
+                    </div>
+                </div>
+                
+                <div class="sub-options" id="food-suboptions">
+                    <!-- Options will be populated by JavaScript -->
+                </div>
+                
+                <div class="question-group">
+                    <label for="food-amount">Amount consumed weekly (kg):</label>
+                    <input type="number" id="food-amount" min="0" step="0.1" value="5">
+                </div>
+            </div>
+            
+            <!-- Section 3: House -->
+            <div class="form-section">
+                <h2><i class="fas fa-home"></i> 3. House Type</h2>
+                <div class="question-group">
+                    <label>Select your house construction type:</label>
+                    <div class="options-grid">
+                        <div class="option-btn" data-house="bricks">Bricks/Concrete</div>
+                        <div class="option-btn" data-house="metal">Metal</div>
+                        <div class="option-btn" data-house="wood">Wood</div>
+                        <div class="option-btn" data-house="grass">Grass & Mud</div>
+                    </div>
+                </div>
+                
+                <div class="question-group">
+                    <label for="house-size">House Size:</label>
+                    <select id="house-size">
+                        <option value="small">Small (≤100 m²)</option>
+                        <option value="medium" selected>Medium (100-200 m²)</option>
+                        <option value="big">Big (200-300 m²)</option>
+                        <option value="huge">Huge (≥300 m²)</option>
+                    </select>
+                </div>
+            </div>
+            
+            <!-- Section 4: Temperature Regulation -->
+            <div class="form-section">
+                <h2><i class="fas fa-thermometer-half"></i> 4. Temperature Regulation</h2>
+                <div class="question-group">
+                    <label>Select your temperature regulation method:</label>
+                    <div class="options-grid">
+                        <div class="option-btn" data-temperature="ac">A.C.</div>
+                        <div class="option-btn" data-temperature="chimney">Chimney</div>
+                        <div class="option-btn" data-temperature="both">Both</div>
+                        <div class="option-btn" data-temperature="none">None</div>
+                    </div>
+                </div>
+                
+                <div class="question-group">
+                    <label for="usage-time">Usage time per day (hours):</label>
+                    <input type="number" id="usage-time" min="0" max="24" step="0.5" value="4">
+                </div>
+                
+                <div class="question-group">
+                    <label for="usage-frequency">Usage Frequency:</label>
+                    <select id="usage-frequency">
+                        <option value="seasonally">Seasonally (3 months/year)</option>
+                        <option value="regular" selected>Regular (6 months/year)</option>
+                        <option value="often">Often (9 months/year)</option>
+                        <option value="all-day">All Day (12 months/year)</option>
+                    </select>
+                </div>
+            </div>
+            
+            <!-- Section 5: House Materials Percentage -->
+            <div class="form-section">
+                <h2><i class="fas fa-percentage"></i> 5. House Materials Percentage</h2>
+                <p class="helper-text">Enter percentages for each material (must total 100%)</p>
+                
+                <div class="percentage-inputs">
+                    <div class="percentage-group">
+                        <label for="material-plastic">Plastics (%):</label>
+                        <input type="number" id="material-plastic" min="0" max="100" step="1" value="15">
+                    </div>
+                    
+                    <div class="percentage-group">
+                        <label for="material-metal">Metal (%):</label>
+                        <input type="number" id="material-metal" min="0" max="100" step="1" value="20">
+                    </div>
+                    
+                    <div class="percentage-group">
+                        <label for="material-wood">Wood (%):</label>
+                        <input type="number" id="material-wood" min="0" max="100" step="1" value="25">
+                    </div>
+                    
+                    <div class="percentage-group">
+                        <label for="material-clay">Clay (%):</label>
+                        <input type="number" id="material-clay" min="0" max="100" step="1" value="20">
+                    </div>
+                    
+                    <div class="percentage-group">
+                        <label for="material-other">Other (%):</label>
+                        <input type="number" id="material-other" min="0" max="100" step="1" value="20">
+                    </div>
+                </div>
+                
+                <div class="percentage-status" id="percentage-status">
+                    Total: 100% (Valid)
+                </div>
+                
+                <p class="helper-text">The remaining percentage will be auto-filled if total is less than 100%</p>
+            </div>
+            
+            <!-- Section 6: Waste Disposal -->
+            <div class="form-section">
+                <h2><i class="fas fa-trash-alt"></i> 6. Waste Disposal</h2>
+                <div class="question-group">
+                    <label>Select your primary waste disposal method:</label>
+                    <div class="options-grid">
+                        <div class="option-btn" data-waste="burning">Burning</div>
+                        <div class="option-btn" data-waste="recycling">Recycling</div>
+                        <div class="option-btn" data-waste="landfill">Landfill</div>
+                        <div class="option-btn" data-waste="composting">Composting</div>
+                    </div>
+                </div>
+                
+                <div class="question-group">
+                    <label for="waste-amount">Waste generated weekly (kg):</label>
+                    <input type="number" id="waste-amount" min="0" step="0.1" value="7">
+                </div>
+            </div>
+            
+            <!-- Section 7: Additional - Electricity Usage -->
+            <div class="form-section">
+                <h2><i class="fas fa-bolt"></i> 7. Electricity Usage</h2>
+                <div class="question-group">
+                    <label for="electricity-source">Primary Electricity Source:</label>
+                    <select id="electricity-source">
+                        <option value="renewable">Renewable (Solar/Wind)</option>
+                        <option value="natural-gas">Natural Gas</option>
+                        <option value="coal" selected>Coal</option>
+                        <option value="oil">Oil</option>
+                        <option value="nuclear">Nuclear</option>
+                    </select>
+                </div>
+                
+                <div class="question-group">
+                    <label for="electricity-amount">Monthly Electricity Usage (kWh):</label>
+                    <input type="number" id="electricity-amount" min="0" step="10" value="300">
+                </div>
+            </div>
+            
+            <!-- Section 8: Additional - Water Usage -->
+            <div class="form-section">
+                <h2><i class="fas fa-tint"></i> 8. Water Usage</h2>
+                <div class="question-group">
+                    <label for="water-heating">Water Heating Method:</label>
+                    <select id="water-heating">
+                        <option value="solar">Solar Heater</option>
+                        <option value="electric" selected>Electric Heater</option>
+                        <option value="gas">Gas Heater</option>
+                        <option value="none">No Heater</option>
+                    </select>
+                </div>
+                
+                <div class="question-group">
+                    <label for="water-amount">Daily Water Usage (liters):</label>
+                    <input type="number" id="water-amount" min="0" step="10" value="150">
+                    <p class="helper-text">Includes drinking, cooking, cleaning, etc.</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Calculate Button -->
+        <button class="calculate-btn" id="calculate-btn">
+            <i class="fas fa-calculator"></i> Calculate My Carbon Footprint
+        </button>
+        
+        <!-- Results Section -->
+        <div class="results-section" id="results-section" style="display: none;">
+            <h2>Your Carbon Footprint Results</h2>
+            
+            <div class="results-container">
+                <div class="emissions-summary">
+                    <h3>Your Annual Carbon Emissions</h3>
+                    <div class="total-emissions" id="total-emissions">0.00</div>
+                    <p style="text-align: center; margin-bottom: 15px;">tons of CO₂ per year</p>
+                    
+                    <h3>Breakdown by Category</h3>
+                    <div id="breakdown-list">
+                        <!-- Breakdown will be populated by JavaScript -->
+                    </div>
+                    
+                    <div class="trees-needed">
+                        To offset your emissions, you should plant approximately:
+                        <span id="trees-count">0</span> trees per year
+                    </div>
+                </div>
+                
+                <div>
+                    <h3>Your Emissions </h3>
+                    <div class="chart-container">
+                        <canvas id="emissionsChart"></canvas>
+                    </div>
+                    <p class="helper-text" style="text-align: center; margin-top: 10px;">
+                        World average: 4.8 tons CO₂ per person annually
+                    </p>
+                </div>
+            </div>
+            
+            <button class="reset-btn" id="reset-btn">
+                <i class="fas fa-redo"></i> Reset Calculator
+            </button>
+        </div>
+        
+        <!-- Credit Section -->
+        <div class="credit-section">
+            <p>This calculator is dedicated to individuals with low carbon footprints who inspire us to live sustainably.</p>
+            <div class="credit-person">Inspired by: The Amish Community</div>
+            <p class="helper-text" style="margin-top: 10px;">
+                The Amish community is known for their minimal environmental impact due to their simple, 
+                technology-limited lifestyle and reliance on manual labor and renewable resources.
+            </p>
+        </div>
+        
+        <footer>
+            <p>CarbonKind © 2023 | Designed to raise awareness about carbon emissions and promote sustainable living</p>
+            <p>Note: Calculations are based on average emission factors and are estimates only.</p>
+        </footer>
+    </div>
+
+    <script>
+        // DOM Elements
+        const calculateBtn = document.getElementById('calculate-btn');
+        const resetBtn = document.getElementById('reset-btn');
+        const resultsSection = document.getElementById('results-section');
+        const totalEmissionsEl = document.getElementById('total-emissions');
+        const treesCountEl = document.getElementById('trees-count');
+        const breakdownList = document.getElementById('breakdown-list');
+        const percentageStatus = document.getElementById('percentage-status');
+        
+        // Transport elements
+        const transportBtns = document.querySelectorAll('[data-transport]');
+        const transportSuboptions = document.getElementById('transport-suboptions');
+        const transportDistance = document.getElementById('transport-distance');
+        
+        // Food elements
+        const foodBtns = document.querySelectorAll('[data-food]');
+        const foodSuboptions = document.getElementById('food-suboptions');
+        const foodAmount = document.getElementById('food-amount');
+        
+        // House elements
+        const houseBtns = document.querySelectorAll('[data-house]');
+        const houseSize = document.getElementById('house-size');
+        
+        // Temperature elements
+        const temperatureBtns = document.querySelectorAll('[data-temperature]');
+        const usageTime = document.getElementById('usage-time');
+        const usageFrequency = document.getElementById('usage-frequency');
+        
+        // Material percentage elements
+        const materialInputs = document.querySelectorAll('.percentage-group input');
+        
+        // Waste elements
+        const wasteBtns = document.querySelectorAll('[data-waste]');
+        const wasteAmount = document.getElementById('waste-amount');
+        
+        // Additional elements
+        const electricitySource = document.getElementById('electricity-source');
+        const electricityAmount = document.getElementById('electricity-amount');
+        const waterHeating = document.getElementById('water-heating');
+        const waterAmount = document.getElementById('water-amount');
+        
+        // Emission factors (kg CO2 per unit)
+        const emissionFactors = {
+            // Transport: kg CO2 per km
+            transport: {
+                car: {
+                    electric: 0.05,
+                    fuel: 0.21,
+                    hybrid: 0.12
+                },
+                bicycle: {
+                    manpower: 0.001 // Minimal for food energy consumption
+                },
+                feet: {
+                    distance: 0.001 // Minimal for food energy consumption
+                },
+                other: {
+                    electric: 0.08,
+                    fuel: 0.15,
+                    manpower: 0.002,
+                    distance: 0.10 // Average for other transport
+                }
+            },
+            
+            // Food: kg CO2 per kg of food
+            food: {
+                packed: {
+                    plastic: 2.5,
+                    paper: 1.8,
+                    glass: 2.2,
+                    metal: 2.0
+                },
+                fresh: {
+                    market: 0.8,
+                    garden: 0.1,
+                    supermarket: 1.2
+                },
+                cooked: {
+                    biogas: 0.5,
+                    charcoal: 2.5,
+                    coal: 3.0,
+                    firewood: 1.8,
+                    electric: 1.2
+                }
+            },
+            
+            // House: kg CO2 per m2 annually
+            house: {
+                bricks: 120,
+                metal: 150,
+                wood: 80,
+                grass: 40
+            },
+            
+            // House size multipliers
+            houseSize: {
+                small: 0.7,
+                medium: 1.0,
+                big: 1.5,
+                huge: 2.2
+            },
+            
+            // Temperature regulation: kg CO2 per hour
+            temperature: {
+                ac: 0.8,
+                chimney: 0.3,
+                both: 1.1,
+                none: 0
+            },
+            
+            // Usage frequency multipliers (months per year)
+            usageFrequency: {
+                seasonally: 3,
+                regular: 6,
+                often: 9,
+                'all-day': 12
+            },
+            
+            // House materials: kg CO2 per percentage point
+            materials: {
+                plastic: 8,
+                metal: 5,
+                wood: 2,
+                clay: 1,
+                other: 3
+            },
+            
+            // Waste disposal: kg CO2 per kg of waste
+            waste: {
+                burning: 2.5,
+                recycling: -0.3, // Negative because it saves emissions
+                landfill: 1.2,
+                composting: 0.2
+            },
+            
+            // Electricity: kg CO2 per kWh
+            electricity: {
+                renewable: 0.02,
+                'natural-gas': 0.5,
+                coal: 0.9,
+                oil: 0.7,
+                nuclear: 0.01
+            },
+            
+            // Water: kg CO2 per liter (for heating)
+            water: {
+                solar: 0.001,
+                electric: 0.01,
+                gas: 0.005,
+                none: 0
+            }
+        };
+        
+        // Selected options
+        let selectedTransport = 'car';
+        let selectedTransportSubtype = 'fuel';
+        let selectedFood = 'fresh';
+        let selectedFoodSubtype = 'supermarket';
+        let selectedHouse = 'bricks';
+        let selectedTemperature = 'ac';
+        let selectedWaste = 'landfill';
+        
+        // Initialize the calculator
+        function initCalculator() {
+            // Set default selections
+            setActiveOption(transportBtns, 'car');
+            setActiveOption(foodBtns, 'fresh');
+            setActiveOption(houseBtns, 'bricks');
+            setActiveOption(temperatureBtns, 'ac');
+            setActiveOption(wasteBtns, 'landfill');
+            
+            // Generate suboptions
+            generateTransportSuboptions('car');
+            generateFoodSuboptions('fresh');
+            
+            // Setup event listeners for percentage inputs
+            setupPercentageInputs();
+            
+            // Setup other event listeners
+            setupEventListeners();
+        }
+        
+        // Set active option in a button group
+        function setActiveOption(buttons, value) {
+            buttons.forEach(btn => {
+                if (btn.dataset[Object.keys(btn.dataset)[0]] === value) {
+                    btn.classList.add('selected');
+                } else {
+                    btn.classList.remove('selected');
+                }
+            });
+        }
+        
+        // Generate transport suboptions based on selection
+        function generateTransportSuboptions(transport) {
+            let html = '';
+            
+            if (transport === 'car') {
+                html = `
+                    <div class="question-group">
+                        <label>Car type:</label>
+                        <div class="options-grid">
+                            <div class="option-btn transport-sub" data-subtype="electric">Electric</div>
+                            <div class="option-btn transport-sub" data-subtype="fuel">Fuel</div>
+                            <div class="option-btn transport-sub" data-subtype="hybrid">Hybrid</div>
+                        </div>
+                    </div>
+                `;
+            } else if (transport === 'bicycle') {
+                html = `
+                    <div class="question-group">
+                        <label>Bicycle type:</label>
+                        <div class="options-grid">
+                            <div class="option-btn transport-sub" data-subtype="manpower">Man Power</div>
+                        </div>
+                    </div>
+                `;
+            } else if (transport === 'feet') {
+                html = `
+                    <div class="question-group">
+                        <label>On foot type:</label>
+                        <div class="options-grid">
+                            <div class="option-btn transport-sub" data-subtype="distance">Distance</div>
+                        </div>
+                    </div>
+                `;
+            } else if (transport === 'other') {
+                html = `
+                    <div class="question-group">
+                        <label>Other transport type:</label>
+                        <div class="options-grid">
+                            <div class="option-btn transport-sub" data-subtype="electric">Electric</div>
+                            <div class="option-btn transport-sub" data-subtype="fuel">Fuel</div>
+                            <div class="option-btn transport-sub" data-subtype="manpower">Man Power</div>
+                            <div class="option-btn transport-sub" data-subtype="distance">Distance</div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            transportSuboptions.innerHTML = html;
+            transportSuboptions.classList.add('active');
+            
+            // Set default subtype
+            const defaultSubtype = transport === 'car' ? 'fuel' : 
+                                  transport === 'bicycle' ? 'manpower' :
+                                  transport === 'feet' ? 'distance' : 'fuel';
+            
+            selectedTransportSubtype = defaultSubtype;
+            
+            // Add event listeners to subtype buttons
+            setTimeout(() => {
+                const subtypeBtns = document.querySelectorAll('.transport-sub');
+                subtypeBtns.forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        subtypeBtns.forEach(b => b.classList.remove('selected'));
+                        this.classList.add('selected');
+                        selectedTransportSubtype = this.dataset.subtype;
+                    });
+                    
+                    if (btn.dataset.subtype === defaultSubtype) {
+                        btn.classList.add('selected');
+                    }
+                });
+            }, 10);
+        }
+        
+        // Generate food suboptions based on selection
+        function generateFoodSuboptions(food) {
+            let html = '';
+            
+            if (food === 'packed') {
+                html = `
+                    <div class="question-group">
+                        <label>Package material:</label>
+                        <div class="options-grid">
+                            <div class="option-btn food-sub" data-subtype="plastic">Plastic</div>
+                            <div class="option-btn food-sub" data-subtype="paper">Paper</div>
+                            <div class="option-btn food-sub" data-subtype="glass">Glass</div>
+                            <div class="option-btn food-sub" data-subtype="metal">Metal</div>
+                        </div>
+                    </div>
+                `;
+            } else if (food === 'fresh') {
+                html = `
+                    <div class="question-group">
+                        <label>Food source:</label>
+                        <div class="options-grid">
+                            <div class="option-btn food-sub" data-subtype="market">Market</div>
+                            <div class="option-btn food-sub" data-subtype="garden">Garden</div>
+                            <div class="option-btn food-sub" data-subtype="supermarket">Supermarket</div>
+                        </div>
+                    </div>
+                `;
+            } else if (food === 'cooked') {
+                html = `
+                    <div class="question-group">
+                        <label>Cooking fuel:</label>
+                        <div class="options-grid">
+                            <div class="option-btn food-sub" data-subtype="biogas">Biogas</div>
+                            <div class="option-btn food-sub" data-subtype="charcoal">Charcoal</div>
+                            <div class="option-btn food-sub" data-subtype="coal">Coal</div>
+                            <div class="option-btn food-sub" data-subtype="firewood">Firewood</div>
+                            <div class="option-btn food-sub" data-subtype="electric">Electric</div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            foodSuboptions.innerHTML = html;
+            foodSuboptions.classList.add('active');
+            
+            // Set default subtype
+            const defaultSubtype = food === 'packed' ? 'plastic' : 
+                                  food === 'fresh' ? 'supermarket' : 'electric';
+            
+            selectedFoodSubtype = defaultSubtype;
+            
+            // Add event listeners to subtype buttons
+            setTimeout(() => {
+                const subtypeBtns = document.querySelectorAll('.food-sub');
+                subtypeBtns.forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        subtypeBtns.forEach(b => b.classList.remove('selected'));
+                        this.classList.add('selected');
+                        selectedFoodSubtype = this.dataset.subtype;
+                    });
+                    
+                    if (btn.dataset.subtype === defaultSubtype) {
+                        btn.classList.add('selected');
+                    }
+                });
+            }, 10);
+        }
+        
+        // Setup percentage inputs with auto-fill functionality
+        function setupPercentageInputs() {
+            materialInputs.forEach(input => {
+                input.addEventListener('input', updatePercentages);
+            });
+            
+            // Initialize percentages
+            updatePercentages();
+        }
+        
+        // Update percentages and auto-fill if needed
+        function updatePercentages() {
+            let total = 0;
+            let filledInputs = 0;
+            let lastInput = null;
+            
+            // Calculate total and count filled inputs
+            materialInputs.forEach(input => {
+                const value = parseFloat(input.value) || 0;
+                total += value;
+                if (value > 0) filledInputs++;
+                if (value > 0 || input.value !== '') lastInput = input;
+            });
+            
+            // Auto-fill if total < 100 and we have at least one input
+            if (total < 100 && filledInputs > 0 && filledInputs < materialInputs.length) {
+                const remaining = 100 - total;
+                const emptyInputs = Array.from(materialInputs).filter(input => {
+                    const value = parseFloat(input.value) || 0;
+                    return value === 0 && input.value === '';
+                });
+                
+                if (emptyInputs.length === 1) {
+                    emptyInputs[0].value = Math.round(remaining);
+                    total = 100;
+                }
+            }
+            
+            // Update status
+            if (total === 100) {
+                percentageStatus.textContent = `Total: ${total}% (Valid)`;
+                percentageStatus.className = 'percentage-status valid';
+            } else if (total > 100) {
+                percentageStatus.textContent = `Total: ${total}% (Exceeds 100%)`;
+                percentageStatus.className = 'percentage-status invalid';
+            } else {
+                percentageStatus.textContent = `Total: ${total}% (${100-total}% remaining)`;
+                percentageStatus.className = 'percentage-status warning';
+            }
+        }
+        
+        // Setup event listeners
+        function setupEventListeners() {
+            // Transport buttons
+            transportBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    transportBtns.forEach(b => b.classList.remove('selected'));
+                    this.classList.add('selected');
+                    selectedTransport = this.dataset.transport;
+                    generateTransportSuboptions(selectedTransport);
+                });
+            });
+            
+            // Food buttons
+            foodBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    foodBtns.forEach(b => b.classList.remove('selected'));
+                    this.classList.add('selected');
+                    selectedFood = this.dataset.food;
+                    generateFoodSuboptions(selectedFood);
+                });
+            });
+            
+            // House buttons
+            houseBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    houseBtns.forEach(b => b.classList.remove('selected'));
+                    this.classList.add('selected');
+                    selectedHouse = this.dataset.house;
+                });
+            });
+            
+            // Temperature buttons
+            temperatureBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    temperatureBtns.forEach(b => b.classList.remove('selected'));
+                    this.classList.add('selected');
+                    selectedTemperature = this.dataset.temperature;
+                });
+            });
+            
+            // Waste buttons
+            wasteBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    wasteBtns.forEach(b => b.classList.remove('selected'));
+                    this.classList.add('selected');
+                    selectedWaste = this.dataset.waste;
+                });
+            });
+            
+            // Calculate button
+            calculateBtn.addEventListener('click', calculateFootprint);
+            
+            // Reset button
+            resetBtn.addEventListener('click', resetCalculator);
+        }
+        
+        // Calculate carbon footprint
+        function calculateFootprint() {
+            // Get all values
+            const distance = parseFloat(transportDistance.value) || 0;
+            const foodQty = parseFloat(foodAmount.value) || 0;
+            const houseSizeValue = houseSize.value;
+            const tempTime = parseFloat(usageTime.value) || 0;
+            const tempFrequency = usageFrequency.value;
+            const wasteQty = parseFloat(wasteAmount.value) || 0;
+            const electricityQty = parseFloat(electricityAmount.value) || 0;
+            const waterQty = parseFloat(waterAmount.value) || 0;
+            
+            // Get material percentages
+            const materialPercentages = {
+                plastic: parseFloat(document.getElementById('material-plastic').value) || 0,
+                metal: parseFloat(document.getElementById('material-metal').value) || 0,
+                wood: parseFloat(document.getElementById('material-wood').value) || 0,
+                clay: parseFloat(document.getElementById('material-clay').value) || 0,
+                other: parseFloat(document.getElementById('material-other').value) || 0
+            };
+            
+            // Calculate emissions for each category (in kg CO2 per year)
+            const transportEmissions = calculateTransportEmissions(distance);
+            const foodEmissions = calculateFoodEmissions(foodQty);
+            const houseEmissions = calculateHouseEmissions(houseSizeValue);
+            const temperatureEmissions = calculateTemperatureEmissions(tempTime, tempFrequency);
+            const materialEmissions = calculateMaterialEmissions(materialPercentages);
+            const wasteEmissions = calculateWasteEmissions(wasteQty);
+            const electricityEmissions = calculateElectricityEmissions(electricityQty);
+            const waterEmissions = calculateWaterEmissions(waterQty);
+            
+            // Total emissions in kg
+            const totalEmissionsKg = transportEmissions + foodEmissions + houseEmissions + 
+                                     temperatureEmissions + materialEmissions + wasteEmissions + 
+                                     electricityEmissions + waterEmissions;
+            
+            // Convert to tons
+            const totalEmissionsTons = totalEmissionsKg / 1000;
+            
+            // Display results
+            displayResults(totalEmissionsTons, {
+                transport: transportEmissions / 1000,
+                food: foodEmissions / 1000,
+                house: houseEmissions / 1000,
+                temperature: temperatureEmissions / 1000,
+                materials: materialEmissions / 1000,
+                waste: wasteEmissions / 1000,
+                electricity: electricityEmissions / 1000,
+                water: waterEmissions / 1000
+            });
+            
+            // Show results section
+            resultsSection.style.display = 'block';
+            resultsSection.scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        // Calculate transport emissions
+        function calculateTransportEmissions(distance) {
+            // Daily distance * 365 days * emission factor
+            const dailyKm = distance;
+            const annualKm = dailyKm * 365;
+            
+            let emissionFactor;
+            
+            if (selectedTransport === 'car') {
+                emissionFactor = emissionFactors.transport.car[selectedTransportSubtype];
+            } else if (selectedTransport === 'bicycle') {
+                emissionFactor = emissionFactors.transport.bicycle[selectedTransportSubtype];
+            } else if (selectedTransport === 'feet') {
+                emissionFactor = emissionFactors.transport.feet[selectedTransportSubtype];
+            } else {
+                emissionFactor = emissionFactors.transport.other[selectedTransportSubtype];
+            }
+            
+            return annualKm * emissionFactor * 1000; // Convert to kg
+        }
+        
+        // Calculate food emissions
+        function calculateFoodEmissions(amount) {
+            // Weekly amount * 52 weeks * emission factor
+            const weeklyKg = amount;
+            const annualKg = weeklyKg * 52;
+            
+            let emissionFactor;
+            
+            if (selectedFood === 'packed') {
+                emissionFactor = emissionFactors.food.packed[selectedFoodSubtype];
+            } else if (selectedFood === 'fresh') {
+                emissionFactor = emissionFactors.food.fresh[selectedFoodSubtype];
+            } else {
+                emissionFactor = emissionFactors.food.cooked[selectedFoodSubtype];
+            }
+            
+            return annualKg * emissionFactor;
+        }
+        
+        // Calculate house emissions
+        function calculateHouseEmissions(size) {
+            const emissionFactor = emissionFactors.house[selectedHouse];
+            const sizeMultiplier = emissionFactors.houseSize[size];
+            
+            // Base emissions for a medium-sized house
+            const baseEmissions = emissionFactor * 150; // 150 m2 base
+            return baseEmissions * sizeMultiplier;
+        }
+        
+        // Calculate temperature regulation emissions
+        function calculateTemperatureEmissions(time, frequency) {
+            const emissionFactor = emissionFactors.temperature[selectedTemperature];
+            const frequencyMonths = emissionFactors.usageFrequency[frequency];
+            
+            // Daily hours * 30 days per month * months per year * emission factor
+            return time * 30 * frequencyMonths * emissionFactor * 1000; // Convert to kg
+        }
+        
+        // Calculate material emissions
+        function calculateMaterialEmissions(percentages) {
+            let total = 0;
+            
+            for (const [material, percentage] of Object.entries(percentages)) {
+                total += percentage * emissionFactors.materials[material];
+            }
+            
+            return total * 10; // Scale factor for house size
+        }
+        
+        // Calculate waste emissions
+        function calculateWasteEmissions(amount) {
+            // Weekly amount * 52 weeks * emission factor
+            const weeklyKg = amount;
+            const annualKg = weeklyKg * 52;
+            const emissionFactor = emissionFactors.waste[selectedWaste];
+            
+            return annualKg * emissionFactor;
+        }
+        
+        // Calculate electricity emissions
+        function calculateElectricityEmissions(amount) {
+            // Monthly kWh * 12 months * emission factor
+            const monthlyKwh = amount;
+            const annualKwh = monthlyKwh * 12;
+            const source = electricitySource.value;
+            const emissionFactor = emissionFactors.electricity[source];
+            
+            return annualKwh * emissionFactor * 1000; // Convert to kg
+        }
+        
+        // Calculate water emissions
+        function calculateWaterEmissions(amount) {
+            // Daily liters * 365 days * emission factor
+            const dailyLiters = amount;
+            const annualLiters = dailyLiters * 365;
+            const heatingMethod = waterHeating.value;
+            const emissionFactor = emissionFactors.water[heatingMethod];
+            
+            return annualLiters * emissionFactor * 1000; // Convert to kg
+        }
+        
+        // Display results
+        function displayResults(totalEmissions, breakdown) {
+            // Format total emissions
+            totalEmissionsEl.textContent = totalEmissions.toFixed(2);
+            
+            // Calculate trees needed (1 tree absorbs ~21 kg CO2 per year)
+            const treesNeeded = Math.ceil(totalEmissions * 1000 / 21);
+            treesCountEl.textContent = treesNeeded;
+            
+            // Create breakdown list
+            let breakdownHtml = '<ul style="list-style: none; padding: 0;">';
+            
+            const categories = [
+                { name: 'Transport', value: breakdown.transport, color: '#4CAF50' },
+                { name: 'Food', value: breakdown.food, color: '#8BC34A' },
+                { name: 'House Construction', value: breakdown.house, color: '#CDDC39' },
+                { name: 'Temperature Regulation', value: breakdown.temperature, color: '#FFC107' },
+                { name: 'House Materials', value: breakdown.materials, color: '#FF9800' },
+                { name: 'Waste Disposal', value: breakdown.waste, color: '#FF5722' },
+                { name: 'Electricity', value: breakdown.electricity, color: '#795548' },
+                { name: 'Water Usage', value: breakdown.water, color: '#2196F3' }
+            ];
+            
+            categories.forEach(category => {
+                const percentage = totalEmissions > 0 ? (category.value / totalEmissions * 100).toFixed(1) : 0;
+                breakdownHtml += `
+                    <li style="margin-bottom: 10px; padding: 10px; background-color: #f9f9f9; border-radius: 5px; border-left: 4px solid ${category.color}">
+                        <strong>${category.name}:</strong> ${category.value.toFixed(2)} tons (${percentage}%)
+                    </li>
+                `;
+            });
+            
+            breakdownHtml += '</ul>';
+            breakdownList.innerHTML = breakdownHtml;
+            
+            // Create pie chart
+            createPieChart(totalEmissions, categories);
+        }
+        
+        // Create pie chart
+        function createPieChart(totalEmissions, categories) {
+            const ctx = document.getElementById('emissionsChart').getContext('2d');
+            
+            // Destroy existing chart if it exists
+            if (window.emissionsChartInstance) {
+                window.emissionsChartInstance.destroy();
+            }
+            
+            // Prepare data for chart
+            const labels = categories.map(c => c.name);
+            const data = categories.map(c => c.value);
+            const backgroundColors = categories.map(c => c.color);
+            
+            // Create chart
+            window.emissionsChartInstance = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: data,
+                        backgroundColor: backgroundColors,
+                        borderWidth: 1,
+                        borderColor: '#fff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 20,
+                                usePointStyle: true,
+                                font: {
+                                    size: 11
+                                }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label || '';
+                                    const value = context.raw || 0;
+                                    const percentage = totalEmissions > 0 ? (value / totalEmissions * 100).toFixed(1) : 0;
+                                    return `${label}: ${value.toFixed(2)} tons (${percentage}%)`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Reset calculator
+        function resetCalculator() {
+            // Reset all inputs to default values
+            transportDistance.value = 10;
+            foodAmount.value = 5;
+            houseSize.value = 'medium';
+            usageTime.value = 4;
+            usageFrequency.value = 'regular';
+            wasteAmount.value = 7;
+            electricityAmount.value = 300;
+            electricitySource.value = 'coal';
+            waterAmount.value = 150;
+            waterHeating.value = 'electric';
+            
+            // Reset percentage inputs
+            document.getElementById('material-plastic').value = 15;
+            document.getElementById('material-metal').value = 20;
+            document.getElementById('material-wood').value = 25;
+            document.getElementById('material-clay').value = 20;
+            document.getElementById('material-other').value = 20;
+            
+            // Reset selections
+            selectedTransport = 'car';
+            selectedTransportSubtype = 'fuel';
+            selectedFood = 'fresh';
+            selectedFoodSubtype = 'supermarket';
+            selectedHouse = 'bricks';
+            selectedTemperature = 'ac';
+            selectedWaste = 'landfill';
+            
+            // Update UI
+            setActiveOption(transportBtns, 'car');
+            setActiveOption(foodBtns, 'fresh');
+            setActiveOption(houseBtns, 'bricks');
+            setActiveOption(temperatureBtns, 'ac');
+            setActiveOption(wasteBtns, 'landfill');
+            
+            generateTransportSuboptions('car');
+            generateFoodSuboptions('fresh');
+            updatePercentages();
+            
+            // Hide results
+            resultsSection.style.display = 'none';
+            
+            // Scroll to top
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+        
+        // Initialize calculator when page loads
+        document.addEventListener('DOMContentLoaded', initCalculator);
+    </script>
+</body>
+</html>
