@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Carbon101 | Social Network</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { --primary: #0A433A; --accent: #4CAF50; --bg: #f0f4f3; --white: #ffffff; --text: #1a1a1a; --danger: #e74c3c; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+        body { background: var(--bg); color: var(--text); padding-bottom: 60px; }
+        
+        header { 
+            background: var(--primary); color: white; padding: 1rem 5%; 
+            display: flex; flex-direction: column; gap: 10px;
+            position: sticky; top: 0; z-index: 1000; box-shadow: 0 4px 12px rgba(0,0,0,0.1); 
+        }
+        .header-top { display: flex; justify-content: space-between; align-items: center; width: 100%; }
+        
+        /* Search Bar Added */
+        .search-container { position: relative; width: 100%; max-width: 600px; margin: 0 auto; }
+        .search-bar { width: 100%; padding: 8px 15px; border-radius: 20px; border: none; outline: none; }
+        .search-results { 
+            position: absolute; top: 100%; left: 0; right: 0; 
+            background: white; color: black; border-radius: 0 0 15px 15px; 
+            max-height: 200px; overflow-y: auto; display: none; box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+        .search-item { padding: 10px; border-bottom: 1px solid #eee; cursor: pointer; display: flex; align-items: center; gap: 10px; }
+
+        .logo { font-size: 1.5rem; font-weight: 800; }
+        .logo span { color: var(--accent); }
+        .container { max-width: 600px; margin: 20px auto; padding: 0 15px; }
+
+        /* Logic for link overflow fix */
+        .post-card { 
+            background: white; border-radius: 20px; padding: 20px; margin-bottom: 20px; 
+            box-shadow: 0 5px 15px rgba(0,0,0,0.03); position: relative;
+            overflow-wrap: break-word; word-wrap: break-word;
+        }
+        
+        .link-btn { color: var(--accent); font-weight: bold; text-decoration: underline; font-size: 0.8rem; }
+
+        /* User Account Stats View */
+        #account-stats-header { 
+            display: none; background: white; padding: 20px; border-radius: 20px; 
+            margin-bottom: 20px; text-align: center; border: 2px solid var(--accent);
+        }
+
+        .avatar-container { position: relative; width: 50px; height: 50px; cursor: pointer; }
+        .post-header img { width: 45px; height: 45px; border-radius: 50%; object-fit: cover; border: 2px solid #eee; }
+        .btn-follow-plus { position: absolute; bottom: 0; right: 0; background: var(--accent); color: white; border: 2px solid white; border-radius: 50%; width: 20px; height: 20px; font-size: 12px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+
+        .post-header { display: flex; align-items: center; gap: 12px; margin-bottom: 15px; }
+        .post-user-info { flex: 1; cursor: pointer; }
+        .post-stats-bar { display: flex; gap: 15px; margin-bottom: 15px; font-size: 0.85rem; color: #666; }
+        .stat-item { display: flex; align-items: center; gap: 5px; cursor: pointer; }
+        
+        .create-post { background: var(--white); border-radius: 20px; padding: 20px; margin-bottom: 25px; }
+        textarea { width: 100%; border: 1px solid #eee; border-radius: 12px; font-size: 1.1rem; outline: none; resize: vertical; min-height: 180px; padding: 15px; margin-bottom: 10px; }
+        .btn-share { background: var(--primary); color: white; border: none; padding: 12px; border-radius: 12px; width: 100%; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        
+        .feed-tabs { display: flex; gap: 10px; margin-bottom: 20px; }
+        .tab { flex: 1; padding: 10px; text-align: center; background: #ddd; border-radius: 10px; cursor: pointer; font-weight: bold; }
+        .tab.active { background: var(--primary); color: white; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="header-top">
+            <div class="logo">CARBON<span>101</span></div>
+            <div class="user-nav">
+                <img id="nav-avatar" style="width:35px; height:35px; border-radius:50%">
+                <i class="fas fa-sign-out-alt" onclick="firebase.auth().signOut()"></i>
+            </div>
+        </div>
+        <div class="search-container">
+            <input type="text" class="search-bar" placeholder="Search a person..." oninput="searchUsers(this.value)">
+            <div class="search-results" id="search-results"></div>
+        </div>
+    </header>
+
+    <div class="container">
+        <div id="account-stats-header">
+            <img id="acc-avatar" style="width:60px; height:60px; border-radius:50%">
+            <h3 id="acc-name">User Name</h3>
+            <div style="display:flex; justify-content:space-around; margin:15px 0; font-size:0.8rem">
+                <span>Posts: <b id="acc-posts">0</b></span>
+                <span>Followers: <b id="acc-folls">0</b></span>
+                <span>Likes: <b id="acc-likes">0</b></span>
+                <span>Reports: <b id="acc-reps">0</b></span>
+                <span>Comments: <b id="acc-comms">0</b></span>
+            </div>
+            <button class="btn-share" onclick="switchFeed('all')" style="background:#888">Return to Global</button>
+        </div>
+
+        <div id="standard-ui">
+            <div class="stats-strip" style="display:grid; grid-template-columns: repeat(3, 1fr); gap:10px; margin-bottom:20px;">
+                <div class="stat-card" style="background:white; padding:12px; border-radius:15px; text-align:center;"><b id="count-followers">0</b><span>Followers</span></div>
+                <div class="stat-card" style="background:white; padding:12px; border-radius:15px; text-align:center;"><b id="count-following">0</b><span>Following</span></div>
+                <div class="stat-card" style="background:white; padding:12px; border-radius:15px; text-align:center;"><b>99%</b><span>Science</span></div>
+            </div>
+
+            <div class="feed-tabs">
+                <div class="tab active" id="tab-all" onclick="switchFeed('all')">Global</div>
+                <div class="tab" id="tab-following" onclick="switchFeed('following')">Following</div>
+            </div>
+
+            <div class="create-post">
+                <textarea id="post-text" maxlength="1000" oninput="updateCharCount()" placeholder="Share your green journey..."></textarea>
+                <div class="char-count" id="char-label" style="font-size: 0.7rem; color: #888; text-align: right;">0/1000</div>
+                <div class="link-input-group" style="display: flex; gap: 5px; margin-top: 10px;">
+                    <input type="text" id="link-field" placeholder="Paste link..." style="flex: 1; padding: 8px; border: 1px solid #eee; border-radius: 10px;">
+                    <button class="btn-add-link" onclick="attachLink()" style="background: var(--primary); color: white; border: none; padding: 0 15px; border-radius: 10px;"><i class="fas fa-arrow-up"></i></button>
+                </div>
+                <button class="btn-share" onclick="submitPost()">Publish Post</button>
+            </div>
+        </div>
+
+        <div id="feed-container"></div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyD-YxRrtWHA4wEZc0_zTzoYhK4S5cJOJ34",
+            authDomain: "watchbase-d25ad.firebaseapp.com",
+            projectId: "watchbase-d25ad",
+            appId: "1:209882344898:web:212ed39d768a112d727a5b"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        let currentUser = null;
+        let followingList = [];
+        let currentFeedMode = 'all';
+        let filterUid = null;
+
+        firebase.auth().onAuthStateChanged(async user => {
+            if (user) {
+                currentUser = user;
+                await db.collection('users').doc(user.uid).set({ displayName: user.displayName || "User", photoURL: user.photoURL || "" }, { merge: true });
+                document.getElementById('nav-avatar').src = user.photoURL || "https://ui-avatars.com/api/?name="+user.displayName;
+                await syncSocialData();
+                loadFeed();
+            } else { window.location.href = "index.html"; }
+        });
+
+        async function searchUsers(val) {
+            const resDiv = document.getElementById('search-results');
+            if (val.length < 1) { resDiv.style.display = 'none'; return; }
+            const snap = await db.collection('users').where('displayName', '>=', val).limit(5).get();
+            resDiv.innerHTML = "";
+            if (snap.empty) { resDiv.innerHTML = "<div class='search-item'>Not found</div>"; }
+            else {
+                snap.forEach(doc => {
+                    resDiv.innerHTML += `<div class="search-item" onclick="viewAccount('${doc.id}')">
+                        <img src="${doc.data().photoURL || 'https://ui-avatars.com/api/?name='+doc.data().displayName}" style="width:30px; border-radius:50%">
+                        ${doc.data().displayName}
+                    </div>`;
+                });
+            }
+            resDiv.style.display = 'block';
+        }
+
+        async function viewAccount(uid) {
+            document.getElementById('search-results').style.display = 'none';
+            filterUid = uid;
+            currentFeedMode = 'user';
+            
+            document.getElementById('standard-ui').style.display = 'none';
+            document.getElementById('account-stats-header').style.display = 'block';
+            
+            const userDoc = await db.collection('users').doc(uid).get();
+            const postsSnap = await db.collection('posts').where('uid', '==', uid).get();
+            const followersSnap = await db.collection('users').doc(uid).collection('followers').get();
+            
+            let l=0, r=0, c=0;
+            postsSnap.forEach(p => { 
+                l += (p.data().likes || []).length; 
+                r += (p.data().reports || []).length; 
+                c += (p.data().comments || []).length; 
+            });
+
+            document.getElementById('acc-avatar').src = userDoc.data().photoURL || "https://ui-avatars.com/api/?name="+userDoc.data().displayName;
+            document.getElementById('acc-name').innerText = userDoc.data().displayName;
+            document.getElementById('acc-posts').innerText = postsSnap.size;
+            document.getElementById('acc-folls').innerText = followersSnap.size;
+            document.getElementById('acc-likes').innerText = l;
+            document.getElementById('acc-reps').innerText = r;
+            document.getElementById('acc-comms').innerText = c;
+
+            loadFeed();
+        }
+
+        function renderMedia(content) {
+            const urlRegex = /(https?:\/\/[^\s]+)/g;
+            const links = content.match(urlRegex) || [];
+            let cleanText = content.replace(urlRegex, '').trim();
+            let mediaHtml = links.map(url => {
+                if (url.match(/\.(jpeg|jpg|gif|png|webp)/i)) return `<img src="${url}" style="width:100%; border-radius:10px; margin-top:10px">`;
+                return `<a href="${url}" target="_blank" class="link-btn">🔗 View Content</a>`;
+            }).join(' ');
+            return { cleanText, mediaHtml };
+        }
+
+        function loadFeed() {
+            db.collection('posts').orderBy('timestamp', 'desc').onSnapshot(snapshot => {
+                const container = document.getElementById('feed-container');
+                container.innerHTML = "";
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    if (currentFeedMode === 'following' && !followingList.includes(data.uid)) return;
+                    if (currentFeedMode === 'user' && data.uid !== filterUid) return;
+
+                    const { cleanText, mediaHtml } = renderMedia(data.content);
+                    container.insertAdjacentHTML('beforeend', `
+                        <div class="post-card">
+                            <div class="post-header">
+                                <div class="avatar-container" onclick="viewAccount('${data.uid}')">
+                                    <img src="${data.avatar || 'https://ui-avatars.com/api/?name='+data.author}">
+                                </div>
+                                <div class="post-user-info" onclick="viewAccount('${data.uid}')"><h4>${data.author}</h4></div>
+                            </div>
+                            <div style="white-space: pre-wrap;">${cleanText}</div>
+                            <div class="media-preview">${mediaHtml}</div>
+                            <div class="post-stats-bar" style="margin-top:10px">
+                                <div class="stat-item" onclick="toggleLike('${doc.id}', ${data.likes?.includes(currentUser.uid)})"><i class="fas fa-heart"></i> ${data.likes?.length || 0}</div>
+                                <div class="stat-item"><i class="fas fa-comment"></i> ${data.comments?.length || 0}</div>
+                            </div>
+                        </div>
+                    `);
+                });
+            });
+        }
+
+        function switchFeed(mode) {
+            currentFeedMode = mode;
+            filterUid = null;
+            document.getElementById('standard-ui').style.display = 'block';
+            document.getElementById('account-stats-header').style.display = 'none';
+            document.getElementById('tab-all').classList.toggle('active', mode === 'all');
+            document.getElementById('tab-following').classList.toggle('active', mode === 'following');
+            loadFeed();
+        }
+
+        async function submitPost() {
+            const text = document.getElementById('post-text').value;
+            if (!text.trim()) return;
+            await db.collection('posts').add({
+                uid: currentUser.uid, author: currentUser.displayName, avatar: currentUser.photoURL,
+                content: text, likes: [], reports: [], comments: [], timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            document.getElementById('post-text').value = "";
+        }
+
+        function attachLink() {
+            const field = document.getElementById('link-field');
+            if (field.value.trim()) { document.getElementById('post-text').value += " " + field.value; field.value = ""; }
+        }
+
+        async function syncSocialData() {
+            const f = await db.collection('users').doc(currentUser.uid).collection('following').get();
+            followingList = f.docs.map(d => d.id);
+            document.getElementById('count-following').innerText = followingList.length;
+        }
+
+        async function toggleLike(pid, isLiked) {
+            const ref = db.collection('posts').doc(pid);
+            if (isLiked) await ref.update({ likes: firebase.firestore.FieldValue.arrayRemove(currentUser.uid) });
+            else await ref.update({ likes: firebase.firestore.FieldValue.arrayUnion(currentUser.uid) });
+        }
+
+        function updateCharCount() {
+            document.getElementById('char-label').innerText = document.getElementById('post-text').value.length + "/1000";
+        }
+    </script>
+</body>
+</html>
