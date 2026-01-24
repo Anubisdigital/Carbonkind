@@ -1,0 +1,182 @@
+ <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Carbon101 | Join the Revolution</title>
+    <link rel="stylesheet" href="https://www.gstatic.com/firebasejs/ui/6.0.0/firebase-ui-auth.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #0A433A;
+            --accent: #2ecc71;
+            --glass: rgba(255, 255, 255, 0.1);
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: radial-gradient(circle at center, #1e3a34 0%, #051a16 100%);
+            font-family: 'Inter', -apple-system, sans-serif;
+            overflow: hidden;
+        }
+
+        /* Scientific Background Decoration */
+        .eco-bg {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            opacity: 0.1;
+            background-image: url('https://www.transparenttextures.com/patterns/carbon-fibre.png');
+        }
+
+        .auth-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            padding: 40px;
+            border-radius: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+            width: 90%;
+            max-width: 420px;
+            text-align: center;
+            animation: slideUp 0.8s ease-out;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .logo-section i {
+            font-size: 3rem;
+            color: var(--accent);
+            margin-bottom: 15px;
+            filter: drop-shadow(0 0 10px rgba(46, 204, 113, 0.5));
+        }
+
+        h1 {
+            color: white;
+            font-size: 2.2rem;
+            margin: 10px 0;
+            letter-spacing: -1px;
+        }
+
+        h1 span { color: var(--accent); }
+
+        p {
+            color: #a0aec0;
+            font-size: 0.95rem;
+            margin-bottom: 30px;
+            line-height: 1.5;
+        }
+
+        /* Firebase UI Customization */
+        #firebaseui-auth-container {
+            margin-top: 20px;
+        }
+
+        .firebaseui-idp-button {
+            border-radius: 15px !important;
+            height: 50px !important;
+            box-shadow: none !important;
+            font-weight: 600 !important;
+        }
+
+        .firebaseui-card-content {
+            padding: 0 !important;
+        }
+
+        .footer-note {
+            margin-top: 25px;
+            font-size: 0.8rem;
+            color: #636e72;
+        }
+    </style>
+</head>
+<body>
+
+<div class="eco-bg"></div>
+
+<div class="auth-card">
+    <div class="logo-section">
+        <img src="anubis.png" height="auto" width="90vw"></i>
+        <h1>CARBON<span>101</span></h1>
+    </div>
+    <p>Securely sign in to track your environmental impact and connect with the community.</p>
+    
+    <div id="firebaseui-auth-container"></div>
+
+    <div class="footer-note">
+        By joining, you agree to promote a sustainable future.
+    </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/ui/6.0.0/firebase-ui-auth.js"></script>
+
+<script>
+    // 1. Your Firebase Configuration (Matches your Project ID)
+    const firebaseConfig = {
+        apiKey: "AIzaSyD-YxRrtWHA4wEZc0_zTzoYhK4S5cJOJ34",
+        authDomain: "watchbase-d25ad.firebaseapp.com",
+        projectId: "watchbase-d25ad",
+        appId: "1:209882344898:web:212ed39d768a112d727a5b"
+    };
+
+    if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+    }
+
+    // 2. Auth UI Configuration
+    const ui = new firebaseui.auth.AuthUI(firebase.auth());
+
+    const uiConfig = {
+        callbacks: {
+            signInSuccessWithAuthResult: function(authResult, redirectUrl) {
+                const user = authResult.user;
+                
+                // If user is new or has no display name, force set one
+                if (!user.displayName) {
+                    const userName = prompt("Welcome to Carbon101! Enter a unique username:");
+                    
+                    if (userName && userName.trim() !== "") {
+                        user.updateProfile({
+                            displayName: userName.trim(),
+                            photoURL: `https://ui-avatars.com/api/?name=${userName}&background=0A433A&color=fff&bold=true`
+                        }).then(() => {
+                            window.location.href = "paper8.html";
+                        });
+                        return false; 
+                    }
+                }
+                return true; 
+            }
+        },
+        signInOptions: [
+            firebase.auth.GoogleAuthProvider.PROVIDER_ID,
+            firebase.auth.EmailAuthProvider.PROVIDER_ID
+        ],
+        signInSuccessUrl: 'paper8.html',
+        signInFlow: 'popup'
+    };
+
+    ui.start('#firebaseui-auth-container', uiConfig);
+
+    // Auto-login check
+    firebase.auth().onAuthStateChanged(user => {
+        if (user && user.displayName) {
+            window.location.href = "paper8.html";
+        }
+    });
+</script>
+
+</body>
+</html>
