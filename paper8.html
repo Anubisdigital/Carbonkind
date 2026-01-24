@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Carbon101 | Social Network</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { --primary: #0A433A; --accent: #4CAF50; --bg: #f0f4f3; --white: #ffffff; --text: #1a1a1a; --danger: #e74c3c; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+        body { background: var(--bg); color: var(--text); padding-bottom: 60px; }
+        header { background: var(--primary); color: white; padding: 1rem 5%; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 1000; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .logo { font-size: 1.5rem; font-weight: 800; }
+        .logo span { color: var(--accent); }
+        .container { max-width: 600px; margin: 20px auto; padding: 0 15px; }
+
+        .feed-tabs { display: flex; gap: 10px; margin-bottom: 20px; }
+        .tab { flex: 1; padding: 10px; text-align: center; background: #ddd; border-radius: 10px; cursor: pointer; font-weight: bold; }
+        .tab.active { background: var(--primary); color: white; }
+
+        .post-card { background: white; border-radius: 20px; padding: 20px; margin-bottom: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.03); position: relative; }
+        
+        .avatar-container { position: relative; width: 50px; height: 50px; }
+        .post-header img { width: 45px; height: 45px; border-radius: 50%; object-fit: cover; border: 2px solid #eee; }
+        .btn-follow-plus { position: absolute; bottom: 0; right: 0; background: var(--accent); color: white; border: 2px solid white; border-radius: 50%; width: 20px; height: 20px; font-size: 12px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+        .btn-follow-plus.following { background: #888; transform: rotate(45deg); }
+
+        .post-header { display: flex; align-items: center; gap: 12px; margin-bottom: 15px; }
+        .post-user-info { flex: 1; }
+
+        .post-stats-bar { display: flex; gap: 15px; margin-bottom: 15px; font-size: 0.85rem; color: #666; }
+        .stat-item { display: flex; align-items: center; gap: 5px; cursor: pointer; }
+        
+        /* Comments View Logic */
+        .comments-view { display: none; margin-top: 15px; padding-top: 10px; border-top: 2px solid var(--bg); }
+        .comment { background: #f9f9f9; padding: 8px; border-radius: 10px; margin-bottom: 5px; font-size: 0.9rem; }
+        .comment b { color: var(--primary); }
+
+        .create-post { background: var(--white); border-radius: 20px; padding: 20px; margin-bottom: 25px; }
+        .char-count { font-size: 0.7rem; color: #888; text-align: right; }
+        
+        .link-input-group { display: flex; gap: 5px; margin-top: 10px; }
+        .link-input-group input { flex: 1; padding: 8px; border: 1px solid #eee; border-radius: 10px; outline: none; }
+        .btn-add-link { background: var(--primary); color: white; border: none; padding: 0 15px; border-radius: 10px; cursor: pointer; }
+
+        .media-preview img, .media-preview video { width: 100%; border-radius: 15px; margin-top: 10px; }
+        .stats-strip { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; }
+        .stat-card { background: white; padding: 12px; border-radius: 15px; text-align: center; }
+        .btn-share { background: var(--primary); color: white; border: none; padding: 12px; border-radius: 12px; width: 100%; font-weight: bold; cursor: pointer; margin-top: 10px; }textarea { 
+    width: 100%; 
+    border: 1px solid #eee; 
+    border-radius: 12px;
+    font-size: 1.1rem; 
+    outline: none; 
+    resize: vertical; 
+    min-height: 180px; 
+    padding: 15px;
+    margin-bottom: 10px;
+}
+
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo">CARBON<span>101</span></div>
+        <div class="user-nav">
+            <img id="nav-avatar" style="width:35px; height:35px; border-radius:50%">
+            <i class="fas fa-sign-out-alt" onclick="firebase.auth().signOut()"></i>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="stats-strip">
+            <div class="stat-card"><b id="count-followers">0</b><span>Followers</span></div>
+            <div class="stat-card"><b id="count-following">0</b><span>Following</span></div>
+            <div class="stat-card"><b>99%</b><span>Science</span></div>
+        </div>
+
+        <div class="feed-tabs">
+            <div class="tab active" id="tab-all" onclick="switchFeed('all')">Global</div>
+            <div class="tab" id="tab-following" onclick="switchFeed('following')">Following</div>
+        </div>
+
+        <div class="create-post">
+          <textarea id="post-text" maxlength="200" oninput="updateCharCount()" placeholder="Share your green journey (Max 200 chars)..." style="background:#fcfcfc;"></textarea>
+
+            <div class="char-count" id="char-label">0/200</div>
+            <div class="link-input-group">
+                <input type="text" id="link-field" placeholder="Paste link (Max 10 total)">
+                <button class="btn-add-link" onclick="attachLink()"><i class="fas fa-arrow-up"></i></button>
+            </div>
+            <button class="btn-share" onclick="submitPost()">Publish Post</button>
+        </div>
+
+        <div id="feed-container"></div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyD-YxRrtWHA4wEZc0_zTzoYhK4S5cJOJ34",
+            authDomain: "watchbase-d25ad.firebaseapp.com",
+            projectId: "watchbase-d25ad",
+            appId: "1:209882344898:web:212ed39d768a112d727a5b"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        let currentUser = null;
+        let followingList = [];
+        let currentFeedMode = 'all';
+        let linkCount = 0;
+
+        firebase.auth().onAuthStateChanged(async user => {
+            if (user) {
+                currentUser = user;
+                document.getElementById('nav-avatar').src = user.photoURL || "https://ui-avatars.com/api/?name="+user.displayName;
+                await syncSocialData();
+                loadFeed();
+            } else { window.location.href = "index.html"; }
+        });
+
+        function updateCharCount() {
+            const len = document.getElementById('post-text').value.length;
+            document.getElementById('char-label').innerText = `${len}/200`;
+        }
+
+        function attachLink() {
+            const field = document.getElementById('link-field');
+            const area = document.getElementById('post-text');
+            if (linkCount >= 10) return alert("Maximum 10 links allowed.");
+            if (!field.value.trim()) return;
+            
+            area.value += "\n" + field.value;
+            field.value = "";
+            linkCount++;
+            updateCharCount();
+        }
+
+        function renderMedia(content) {
+            const urlRegex = /(https?:\/\/[^\s]+)/g;
+            const links = content.match(urlRegex) || [];
+            return links.map(url => {
+                if (url.match(/\.(jpeg|jpg|gif|png|webp)/i)) return `<img src="${url}" style="width:100%; border-radius:10px; margin-top:10px">`;
+                if (url.match(/\.(mp4|webm)/i)) return `<video controls src="${url}" style="width:100%; border-radius:10px; margin-top:10px"></video>`;
+                if (url.includes('youtube.com') || url.includes('youtu.be')) return `<p style="font-size:0.8rem">🎥 YouTube Link: <a href="${url}" target="_blank">${url}</a></p>`;
+                return `<a href="${url}" target="_blank" style="display:block; color:var(--accent); font-size:0.8rem">${url}</a>`;
+            }).join('');
+        }
+
+        async function syncSocialData() {
+            const followSnap = await db.collection('users').doc(currentUser.uid).collection('following').get();
+            followingList = followSnap.docs.map(doc => doc.id);
+            document.getElementById('count-following').innerText = followingList.length;
+            const followerSnap = await db.collection('users').doc(currentUser.uid).collection('followers').get();
+            document.getElementById('count-followers').innerText = followerSnap.size;
+        }
+
+        function switchFeed(mode) {
+            currentFeedMode = mode;
+            document.getElementById('tab-all').classList.toggle('active', mode === 'all');
+            document.getElementById('tab-following').classList.toggle('active', mode === 'following');
+            loadFeed();
+        }
+
+        async function submitPost() {
+            const text = document.getElementById('post-text').value;
+            if (!text.trim()) return alert("Post cannot be empty");
+            try {
+                await db.collection('posts').add({
+                    uid: currentUser.uid, author: currentUser.displayName || "User",
+                    avatar: currentUser.photoURL || "", content: text,
+                    likes: [], reports: [], comments: [],
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                alert("Post successful!");
+                document.getElementById('post-text').value = "";
+                linkCount = 0;
+            } catch (e) { alert("Error: " + e.message); }
+        }
+
+        function loadFeed() {
+            db.collection('posts').orderBy('timestamp', 'desc').limit(5).onSnapshot(snapshot => {
+                const container = document.getElementById('feed-container');
+                container.innerHTML = "";
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    const id = doc.id;
+                    if (currentFeedMode === 'following' && !followingList.includes(data.uid) && data.uid !== currentUser.uid) return;
+
+                    const isFollowing = followingList.includes(data.uid);
+                    const isLiked = data.likes?.includes(currentUser.uid);
+
+                    const postHtml = `
+                        <div class="post-card" id="card-${id}">
+                            <div class="post-header">
+                                <div class="avatar-container">
+                                    <img src="${data.avatar || 'https://ui-avatars.com/api/?name='+data.author}">
+                                    ${data.uid !== currentUser.uid ? `<div class="btn-follow-plus ${isFollowing?'following':''}" onclick="toggleFollow('${data.uid}', ${isFollowing})"><i class="fas fa-plus"></i></div>` : ''}
+                                </div>
+                                <div class="post-user-info"><h4>${data.author}</h4></div>
+                                <i class="fas fa-flag" style="color:#ddd; cursor:pointer" onclick="reportPost('${id}')"></i>
+                            </div>
+                            <div style="white-space: pre-wrap;">${data.content}</div>
+                            <div class="media-preview">${renderMedia(data.content)}</div>
+                            
+                            <div class="post-stats-bar" style="margin-top:15px">
+                                <div class="stat-item ${isLiked?'liked':''}" onclick="toggleLike('${id}', ${isLiked})"><i class="fas fa-heart"></i> ${data.likes?.length || 0}</div>
+                                <div class="stat-item" onclick="toggleComments('${id}')"><i class="fas fa-comment"></i> ${data.comments?.length || 0}</div>
+                                <div class="stat-item" style="color:var(--danger)"><i class="fas fa-bullhorn"></i> ${data.reports?.length || 0}</div>
+                            </div>
+
+                            <div class="comments-view" id="view-${id}">
+                                <div id="list-${id}">
+                                    ${(data.comments || []).map(c => `<div class="comment"><b>${c.user}:</b> ${c.text}</div>`).join('')}
+                                </div>
+                                <div class="link-input-group">
+                                    <input type="text" id="comm-input-${id}" placeholder="Add comment...">
+                                    <button class="btn-add-link" onclick="addComment('${id}')"><i class="fas fa-paper-plane"></i></button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    container.insertAdjacentHTML('beforeend', postHtml);
+                });
+            });
+        }
+
+        function toggleComments(postId) {
+            const allViews = document.querySelectorAll('.comments-view');
+            const targetView = document.getElementById(`view-${postId}`);
+            const isVisible = targetView.style.display === 'block';
+            
+            allViews.forEach(v => v.style.display = 'none'); // Hide all
+            targetView.style.display = isVisible ? 'none' : 'block'; // Toggle target
+        }
+
+        async function addComment(postId) {
+            const input = document.getElementById(`comm-input-${postId}`);
+            if (!input.value.trim()) return;
+            await db.collection('posts').doc(postId).update({
+                comments: firebase.firestore.FieldValue.arrayUnion({
+                    user: currentUser.displayName || "User",
+                    text: input.value
+                })
+            });
+            input.value = "";
+        }
+
+        async function toggleLike(postId, isLiked) {
+            const ref = db.collection('posts').doc(postId);
+            if (isLiked) await ref.update({ likes: firebase.firestore.FieldValue.arrayRemove(currentUser.uid) });
+            else await ref.update({ likes: firebase.firestore.FieldValue.arrayUnion(currentUser.uid) });
+        }
+
+        async function toggleFollow(targetUid, isFollowing) {
+            const me = db.collection('users').doc(currentUser.uid).collection('following').doc(targetUid);
+            const them = db.collection('users').doc(targetUid).collection('followers').doc(currentUser.uid);
+            if (isFollowing) { await me.delete(); await them.delete(); }
+            else { await me.set({t:Date.now()}); await them.set({t:Date.now()}); }
+            syncSocialData();
+        }
+
+        async function reportPost(postId) {
+            if (!confirm("Report post?")) return;
+            const ref = db.collection('posts').doc(postId);
+            const snap = await ref.get();
+            const reports = snap.data().reports || [];
+            if (reports.includes(currentUser.uid)) return alert("Already reported.");
+            await ref.update({ reports: firebase.firestore.FieldValue.arrayUnion(currentUser.uid) });
+            if (reports.length + 1 >= 5) { await ref.delete(); alert("Post removed."); }
+        }
+    </script>
+</body>
+</html>
