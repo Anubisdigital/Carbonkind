@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://carbon101.site/index.html</loc>
+    <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>https://carbon101.site/signup.html</loc>
+    <priority>0.8</priority>
+  </url>
+  <url><loc>https://carbon101.site/paper1.html</loc><priority>0.7</priority></url>
+  <url><loc>https://carbon101.site/paper2.html</loc><priority>0.7</priority></url>
+  <url><loc>https://carbon101.site/paper3.html</loc><priority>0.7</priority></url>
+  <url><loc>https://carbon101.site/paper4.html</loc><priority>0.7</priority></url>
+  <url><loc>https://carbon101.site/paper5.html</loc><priority>0.7</priority></url>
+  <url><loc>https://carbon101.site/paper6.html</loc><priority>0.7</priority></url>
+  <url><loc>https://carbon101.site/paper7.html</loc><priority>0.7</priority></url>
+  <url><loc>https://carbon101.site/paper8.html</loc><priority>0.7</priority></url>
+  <url><loc>https://carbon101.site/paper9.html</loc><priority>0.7</priority></url>
+</urlset>
